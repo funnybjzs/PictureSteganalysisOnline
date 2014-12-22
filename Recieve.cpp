@@ -1,0 +1,153 @@
+/*
+ * Recieve.c
+ *
+ *  Created on: 2014年7月9日
+ *      Author: zhaoshuo
+ */
+#include "Recieve.h"
+
+void RecieveData(char *data, int len, int sckfd) {
+	//组装数据
+	if (left_data != NULL) {
+		left_data = (char *) realloc(left_data, left_length + len + 1);
+		memset(left_data + left_length + len, 0, 1);
+		memcpy(left_data + left_length, data, len);
+
+	} else {
+		left_data = (char *) malloc(len + 1);
+		memset(left_data, 0, len + 1);
+		memcpy(left_data, data, len);
+	}
+	left_length += len;
+
+	if (isHeadStart) {
+		if (strstr(left_data, "\r\n\r\n")) //判断数据是否完整
+				{    //调试打印
+//			printf("head...\n");
+//			int i;
+//			for (i = 0; i < 20; ++i) {
+//				printf("%c", left_data[i]);
+//			}
+//			printf("......\n");
+
+			left_length = RecieveLoop(left_data, left_length, sckfd);
+		} else {
+			;
+		}
+	} else {
+		if (atoi(head.option[CONT_LENGTH]) <= left_length) {
+			//调试打印
+//			printf("body length: %d...\n", atoi(head.option[CONT_LENGTH]));
+//			int i;
+//			for (i = 0; i < 20; ++i) {
+//				printf("%c", left_data[i]);
+//			}
+//			printf("......\n");
+
+			ParseBody(left_data, atoi(head.option[OPT_NUM]));
+			left_length -= atoi(head.option[CONT_LENGTH]);
+
+			if (left_length == 0) {
+				FreeAppHead(&head);
+				free(left_data);
+				left_data = NULL;
+				isHeadStart = true;
+			} else {
+				char *left = left_data;
+				left = left + atoi(head.option[CONT_LENGTH]);
+				FreeAppHead(&head);
+				left_length = RecieveLoop(left, left_length, sckfd);
+			}
+		} else {
+			;
+		}
+	}
+}
+
+int RecieveLoop(char *data, int left_len, int sckfd) {
+	while (left_len > 0) {
+		if (strstr(data, "\r\n\r\n")) //长度够数据头
+				{
+			int head_len = ParseHead(data, &head);
+			//发送确认消息
+			SendConfirmMsg(&head, sckfd);
+			left_len -= head_len;
+			data = data + head_len;
+			int body_len = atoi(head.option[CONT_LENGTH]);
+			//剩余长度够数据体
+			if (left_len >= body_len) {
+//				printf("body length: %d...\n", atoi(head.option[CONT_LENGTH]));
+				ParseBody(data, atoi(head.option[OPT_NUM]));
+				left_len = left_len - body_len;
+
+				//剩余长度刚好够数据体
+				if (left_len == 0) {
+					isHeadStart = true;
+					free(left_data);
+					left_data = NULL;
+					FreeAppHead(&head);
+					break;
+				} else //继续解析下一个
+				{
+					data = data + body_len;
+					FreeAppHead(&head);
+				}
+			} else //剩余长度不够数据体
+			{
+				isHeadStart = false;
+				if (left_len == 0) //刚好够数据头
+						{
+					free(left_data);
+					left_data = NULL;
+					break;
+				} else {
+					char *tmp = (char *)malloc(left_len + 1);
+					memset(tmp, 0, left_len + 1);
+					memcpy(tmp, data, left_len);
+					free(left_data);
+					left_data = NULL;
+					left_data = tmp;
+					tmp = NULL;
+					break;
+				}
+
+			}
+		} else      //不够数据头
+		{
+			char *tmp = (char *)malloc(left_len + 1);
+			memset(tmp, 0, left_len + 1);
+			memcpy(tmp, data, left_len);
+			free(left_data);
+			left_data = NULL;
+			left_data = tmp;
+			tmp = NULL;
+			isHeadStart = true;
+			break;
+		}
+	}
+
+	return left_len;
+}
+
+void SendConfirmMsg(AppData_Head *h, int sckfd) {
+	char msg[200] = { 0 };
+	strcat(msg, h->option[Start_Version]);
+	strcat(msg, " ");
+	strcat(msg, RESOPONSE_MSG[0][0]);
+	strcat(msg, " ");
+	strcat(msg, RESOPONSE_MSG[1][0]);
+	strcat(msg, "\r\n");
+
+	strcat(msg, "X-Data-Seq:");
+	strcat(msg, h->option[Data_Seq]);
+	strcat(msg, "\r\n");
+
+	strcat(msg, "X-Capture-Ip:");
+	strcat(msg, h->option[CAP_IP]);
+	strcat(msg, "\r\n\r\n");
+
+//	printf("response:\n");
+//	printf("%s", msg);
+
+	int len = send(sckfd, msg, strlen(msg), 0);
+}
