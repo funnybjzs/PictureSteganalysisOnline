@@ -13,7 +13,7 @@
  //数据库对象
 // QTDatabase qt("192.168.110.15","1521","orcl","orcl1024","orcl1024");
 
- QTDatabase qt("192.168.1.60","1521","meta","qt","qt");
+ QTDatabase qt("192.168.119.128","1521","orcl","scott","tiger");
 
 void InitSystemEnv()
 {

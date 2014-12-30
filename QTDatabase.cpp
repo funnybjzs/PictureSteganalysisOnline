@@ -61,7 +61,7 @@ bool QTDatabase::Init()
 		 cout<<"----------Database Environment Init Finish !-----------"<<endl;
 
 		 //获取设备信息表id,需要综合管理界面配好之后，人工告知，也可以通过数据库EQU_IP查询
-		 qt_equ_info_id=2;  //人工告知，到时候得改
+		 qt_equ_info_id=10;  //人工添加设备后得到的id
 		 qt_alert_type_id=set_qt_alert_type();
 
 		 return true	;
@@ -137,8 +137,9 @@ int QTDatabase::set_qt_alert_type()
 {
 		try
 		{
-			st->setSQL("insert into QT_ALERT_TYPE(ALERT_TYPE_ID,ALERT_TYPE_LABEL,ALERT_TYPE_DESCRIPTION) values(ALERT_TYPE_ID_SEQ.nextval,:1,:2)");
-			st->setString(1,"04-01");
+			//st->setSQL("insert into QT_ALERT_TYPE(ALERT_TYPE_ID,ALERT_TYPE_LABEL,ALERT_TYPE_DESCRIPTION) values(ALERT_TYPE_ID_SEQ.nextval,:1,:2)");
+			st->setSQL("insert into QT_ALERT_TYPE(ALERT_TYPE_ID,ALERT_TYPE_LABEL,ALERT_TYPE_DESCRIPTION) values(null,:1,:2)");
+			st->setString(1,"13-01");
 			st->setString(2,"steganography-communication, Picture Stego was Detected ");
 
 			st->executeUpdate();
@@ -165,7 +166,7 @@ int QTDatabase::set_qt_service(const MailServerInfo &ml,string fileid)
 		{
 			st->setSQL("insert into QT_SERVICE(SERVICE_ID,SERVICE_TYPE,FILE_NUM,FILE_ID,MAIL_FROM,MAIL_TO,MAIL_TIME,MAIL_SUBJECT) values(SERVICE_ID_SEQ.nextval,:1,:2,:3,:4,:5,to_date(:6,'yyyy-mm-dd hh24:mi:ss'),:7)");
 			st->setInt(1,31);
-			//st->setInt(2,ml.mail.AttachFileLength.size());
+			//st->setInt(2,ml.mail.AttachFileLength.size());    该行为文件个数，下面的统计的是告警文件的个数
 			int file_num=0;
 			for(int i=0;i<ml.mail.AttachFileNames.size();i++)
 			{
@@ -210,14 +211,14 @@ void QTDatabase::set_qt_alert(const MailServerInfo &ml,int service_id,int result
 		st->setInt(1,this->qt_equ_info_id);
 		st->setInt(2,3);
 		st->setInt(3,this->qt_alert_type_id);
-		st->setString(4,"Picutre Stego In Mail");
+		st->setString(4,"Picutre Stego Detected In SMTP !");
 		st->setInt(5,result);
 		st->setInt(6,0);
 		st->setInt(7,1);
 		st->setInt(8,1);
 
 		st->setString(9,ml.common.OPT_FLOW_ID_LIST);
-		st->setInt(10,6);
+		st->setInt(10,31);
 		st->setInt(11,service_id);
 		st->setString(12,ml.common.OPT_SERVER_IP);
 		st->setString(13,ml.common.OPT_CLIENT_IP);

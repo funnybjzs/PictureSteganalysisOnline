@@ -118,7 +118,7 @@ void SmtpParse(char *data, int opt_num)
 							StoreAttachFiles(msi.mail.AttachFileNames[i],msi.mail.AttachFileLength[i],msi.mail.AttachFileContent[i]);
 							cout<<"Start Picture Analysis..."<<endl;
 							//int result=steganalysis(msi.mail.AttachFileContent[i],msi.mail.AttachFileLength[i], msi.mail.AttachFileNames[i],*setting);
-							//用于暂时性规避
+							//用于暂时性规避,PNG图像只能写到硬盘,而非内存数据
 							char filepath[100];
 							strcpy(filepath,PICTURE_TO_STORE);
 							strcat(filepath,msi.mail.AttachFileNames[i]);
@@ -149,7 +149,7 @@ void SmtpParse(char *data, int opt_num)
 					{
 						if (msi.mail.AnalysisResults[i] == 1)
 						{
-							qt.set_qt_alert(msi,qt_service_id,msi.mail.AnalysisResults[i]);   //EQU_ID暂时先用1代替
+							qt.set_qt_alert(msi,qt_service_id,msi.mail.AnalysisResults[i]);
 						}
 					}
 				}

@@ -23,7 +23,11 @@ bool GetHostIp(char *ip,uint32_t len,char *dev)
 	if(!pp)
 		return false;
 	if(fgets(ip,len,pp)==NULL)
+	{
+		pclose(pp);
 		return false;
+	}
+	pclose(pp);
 	return true;
 }
 void *HandleFun(void *arg)
