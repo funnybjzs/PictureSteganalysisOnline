@@ -44,8 +44,7 @@ bool GetFormatTime(char *time,char *format_time)
 bool QTDatabase::Init()
 {
 	//初始化数据库环境
-	char connection[64];
-	sprintf(connection, "%s:%s/%s", host_, port_, service_);
+	string connection=host_+":"+port_+"/"+service_;
 
 	try
 	{
@@ -140,7 +139,7 @@ int QTDatabase::set_qt_alert_type()
 			//st->setSQL("insert into QT_ALERT_TYPE(ALERT_TYPE_ID,ALERT_TYPE_LABEL,ALERT_TYPE_DESCRIPTION) values(ALERT_TYPE_ID_SEQ.nextval,:1,:2)");
 			st->setSQL("insert into QT_ALERT_TYPE(ALERT_TYPE_ID,ALERT_TYPE_LABEL,ALERT_TYPE_DESCRIPTION) values(null,:1,:2)");
 			st->setString(1,"13-01");
-			st->setString(2,"steganography-communication, Picture Stego was Detected ");
+			st->setString(2,"发现图像隐写文件 ");
 
 			st->executeUpdate();
 
@@ -201,7 +200,7 @@ int QTDatabase::set_qt_service(const MailServerInfo &ml,string fileid)
 		}
 }
 
-void QTDatabase::set_qt_alert(const MailServerInfo &ml,int service_id,int result)
+void QTDatabase::set_qt_alert(const MailServerInfo &ml,int service_id,int i)
 {
 	try
 	{
@@ -211,8 +210,10 @@ void QTDatabase::set_qt_alert(const MailServerInfo &ml,int service_id,int result
 		st->setInt(1,this->qt_equ_info_id);
 		st->setInt(2,3);
 		st->setInt(3,this->qt_alert_type_id);
-		st->setString(4,"Picutre Stego Detected In SMTP !");
-		st->setInt(5,result);
+		string tmp=ml.mail.AttachFileNames[i];
+		string info="发现"+tmp+"文件中包含隐写信息!";
+		st->setString(4,info);
+		st->setInt(5,1);
 		st->setInt(6,0);
 		st->setInt(7,1);
 		st->setInt(8,1);

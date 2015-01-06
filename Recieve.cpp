@@ -6,6 +6,11 @@
  */
 #include "Recieve.h"
 
+char *left_data =NULL;
+int left_length = 0;
+bool isHeadStart = true;
+AppData_Head head;
+
 void RecieveData(char *data, int len, int sckfd) {
 	//组装数据
 	if (left_data != NULL) {
@@ -149,5 +154,17 @@ void SendConfirmMsg(AppData_Head *h, int sckfd) {
 //	printf("response:\n");
 //	printf("%s", msg);
 
-	int len = send(sckfd, msg, strlen(msg), 0);
+	send(sckfd, msg, strlen(msg), 0);
+}
+
+void ClearAllTmpData()
+{
+	if(left_data!=NULL)
+	{
+		free(left_data);
+		left_data=NULL;
+	}
+	left_length=0;
+	isHeadStart=true;
+	FreeAppHead(&head);
 }

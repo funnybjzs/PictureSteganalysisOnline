@@ -10,8 +10,8 @@
 //模板信息
  sys_setting  *setting;
 
- //数据库对象
-// QTDatabase qt("192.168.110.15","1521","orcl","orcl1024","orcl1024");
+ //工程部
+ //QTDatabase qt("192.168.1.60","1521","meta","qt","qt");
 
  QTDatabase qt("192.168.119.128","1521","orcl","scott","tiger");
 

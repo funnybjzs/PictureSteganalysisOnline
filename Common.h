@@ -3,6 +3,7 @@
 
 #include "SendHeartbeat.h"
 #include "RecvCmdAndConfig.h"
+#include "Config.h"
 //接口类型宏定义
 #define CMDINTERFACE         0x1                  //指令接口
 #define CONFIGINTERFACE      0x2                  //配置接口

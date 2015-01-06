@@ -69,7 +69,7 @@ int main() {
 	    TcpServer tcp(34890);
         while(true){
 	    tcp.Start();
-	    tcp.Stop();
+	    //tcp.Stop();
         }
 
         tcp.Close();

@@ -149,7 +149,7 @@ void SmtpParse(char *data, int opt_num)
 					{
 						if (msi.mail.AnalysisResults[i] == 1)
 						{
-							qt.set_qt_alert(msi,qt_service_id,msi.mail.AnalysisResults[i]);
+							qt.set_qt_alert(msi,qt_service_id, i);
 						}
 					}
 				}

@@ -124,10 +124,11 @@ void *HandleFun(void *arg)
 				}
 				char sql[256]={0},equType[4]={0};
 				GetPrivateProfileString("HostInfo","EquType","01",equType,4,"./config.ini");
+				uint32_t equ_id=GetPrivateProfileInt("HostInfo","EquId",0,"./config.ini");
 				OraDBOpration *ora=new OraDBOpration();
 				if(ora->Init())
 				{
-					sprintf(sql,"insert into qt_oper_log values (oper_id_seq.nextval,'%s','%s','%s',(select sysdate from dual),'%s')",equType,hostip,cmd==EQUSTOP ? "0000":(cmd==EQUSTART ? "0001":"1111"),username);
+					sprintf(sql,"insert into qt_oper_log values (oper_id_seq.nextval,%d,'%s','%s','%s',(select sysdate from dual),'%s')",equ_id,equType,hostip,cmd==EQUSTOP ? "0000":(cmd==EQUSTART ? "0001":"1111"),username);
 					ora->ExecuteNonQuery(sql);
 					delete ora;
 				}
@@ -176,10 +177,11 @@ void *HandleFun(void *arg)
 				}
 				char sql[256]={0},equType[4]={0};
 				GetPrivateProfileString("HostInfo","EquType","01",equType,4,"./config.ini");
+				uint32_t equ_id=GetPrivateProfileInt("HostInfo","EquId",0,"./config.ini");
 				OraDBOpration *ora=new OraDBOpration();
 				if(ora->Init())
 				{
-					sprintf(sql,"insert into qt_oper_log values (oper_id_seq.nextval,'%s','%s','0010',(select sysdate from dual),'%s')",equType,hostip,username);
+					sprintf(sql,"insert into qt_oper_log values (oper_id_seq.nextval,%d,'%s','%s','0010',(select sysdate from dual),'%s')",equ_id,equType,hostip,username);
 					ora->ExecuteNonQuery(sql);
 					delete ora;
 				}

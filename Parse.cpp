@@ -265,7 +265,11 @@ void FreeHttpServerInfo(HttpServerInfo *hsi) {
 void FreeAppHead(AppData_Head *head) {
 	int i;
 	for (i = 0; i < APPDATA_HEARD_OPTNUM + APPDATA_HEARD_STARTNUM; i++) {
-		free(head->option[i]);
+		if(head->option[i]!=NULL)
+		{
+			free(head->option[i]);
+			head->option[i]=NULL;
+		}
 	}
 }
 

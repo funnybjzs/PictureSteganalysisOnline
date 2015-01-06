@@ -14,14 +14,15 @@ uint32_t GetHeartbeatInfo(uint8_t **buf)
 {
 	uint32_t interfaceType=htonl(HEARTBEATINTERFACE);
 	uint32_t heartbeat;
-	uint32_t contentLen=htonl(sizeof(heartbeat));
+	uint32_t equ_id=htonl(GetPrivateProfileInt("HostInfo","EquId",0,"./config.ini"));
+	uint32_t contentLen=htonl(sizeof(heartbeat)+sizeof(equ_id));
 	uint32_t bufLen=0;
 	uint32_t offset=0;
 	if(heartCondition)
 	  heartbeat=htonl(HEARTSERVICERUN);
 	else
 	  heartbeat=htonl(HEARTSERVICECLOSE);
-	bufLen=sizeof(uint8_t)*(sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t));
+	bufLen=sizeof(uint8_t)*(sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t)+sizeof(uint32_t));
 	*buf=(uint8_t *)malloc(bufLen);
 	if(*buf==NULL)
 	{
@@ -34,6 +35,8 @@ uint32_t GetHeartbeatInfo(uint8_t **buf)
 	offset+=sizeof(interfaceType);
 	memcpy(*buf+offset,&contentLen,sizeof(contentLen));
 	offset+=sizeof(contentLen);
+	memcpy(*buf+offset,&equ_id,sizeof(equ_id));
+	offset+=sizeof(equ_id);
 	memcpy(*buf+offset,&heartbeat,sizeof(heartbeat));
 	return bufLen;
 }

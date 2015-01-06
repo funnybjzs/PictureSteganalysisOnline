@@ -21,7 +21,7 @@ using namespace oracle::occi;
 class QTDatabase
 {
 	public :
-		QTDatabase(char  *host,char  *port,char  *service,string username,string password ):
+		QTDatabase(string  host,string port,string service,string username,string password ):
 			host_(host),port_(port),service_(service),username_(username),password_(password){};
 		virtual ~QTDatabase(){};
 
@@ -30,16 +30,16 @@ class QTDatabase
 		string  set_qt_file(char *file_name,int file_len,char *file_type,char *file_path);
 		int set_qt_alert_type();
 		int set_qt_service(const MailServerInfo &ml,string id);
-		void set_qt_alert(const MailServerInfo &ml,int service_id,int result); //未加File_Id
+		void set_qt_alert(const MailServerInfo &ml,int service_id,int i);
 		void Commit();
 
 	private:
 		//物理信息
-		char  *host_;
-		char * port_;
-		char  *service_;
+		string  host_;
+		string  port_;
+		string  service_;
 		string  username_;
-		string password_;
+		string  password_;
 
 		//数据库环境句柄
 		 Environment *env;

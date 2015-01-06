@@ -11,13 +11,8 @@
 #include "Parse.h"
 #include <sys/socket.h>
 
-static char *left_data =NULL;
-static int left_length = 0;
-static int isHeadStart = true;
-static AppData_Head head;
-
 int RecieveLoop(char *data,int left,int sck_fd);
 void RecieveData(char *data,int len,int sck_fd);
 void SendConfirmMsg(AppData_Head *h,int sck_fd);
-
+void ClearAllTmpData();
 #endif /* RECIEVE_H_ */
