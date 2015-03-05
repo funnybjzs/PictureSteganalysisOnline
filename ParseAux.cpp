@@ -54,17 +54,17 @@ string  WritingAlerts(const MailServerInfo & msi,int index,char *type,char path[
 {
 		if (msi.mail.AnalysisResults[index] == 1) {  //有隐写则写入file表
 			if (msi.common.OPT_TUPLE4_LIST != NULL) {
-				cout<<"Alarm detected!"<<endl;
+				cout<<"检测到可疑文件!"<<endl<<endl;
 				return qt.set_qt_file(msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],type,path);
 			}
 		}
 		else if(msi.mail.AnalysisResults[index]==0) { 	//无隐写
-			cout<<"OK dectected !"<<endl;
+			cout<<"检测正常!"<<endl<<endl;
 			return "";
 		}
 		else
 		{
-			cout<<"Other Types !..."<<endl;						//其它处理返回值，包括出错、其它文件类型等
+			cout<<"其它类型数据或数据错误..."<<endl<<endl;				//其它处理返回值，包括出错、其它文件类型等
 			return "";
 		}
 }
@@ -76,7 +76,8 @@ void HttpParse(char *data,int opt_num)
 			GetHttpOption(data, opt_num, &http);
 			if(http.common.OPT_FLOW_ID_LIST!=NULL)
 			{
-				cout<<http.common.OPT_FLOW_ID_LIST<<endl;
+				//cout<<http.common.OPT_FLOW_ID_LIST<<endl;
+				cout<<"流数据ID : "<<http.common.OPT_FLOW_ID_LIST<<endl;
 			}
 
 			FreeHttpServerInfo(&http);
@@ -91,12 +92,12 @@ void SmtpParse(char *data, int opt_num)
        //FLOW_ID是否为空
 	   if(msi.common.OPT_FLOW_ID_LIST!=NULL) //L31
 	   {
-			printf("Flow Data Id: %s\n", msi.common.OPT_FLOW_ID_LIST);
+			cout<<"流数据ID : "<<msi.common.OPT_FLOW_ID_LIST<<endl;
 	   }
        //邮件基本信息是否为空
 	   if (msi.mail.opt_mail_from!=NULL&&msi.mail.opt_mail_to!=NULL) {
-			printf("Mail From: %s\n", msi.mail.opt_mail_from);
-			printf("Mail To: %s\n", msi.mail.opt_mail_to);
+			printf("发件方: %s\n", msi.mail.opt_mail_from);
+			printf("接收方: %s\n", msi.mail.opt_mail_to);
 			//附件不为空
 
 			string qt_file_ids;   //文件id集合
@@ -108,15 +109,15 @@ void SmtpParse(char *data, int opt_num)
 					char *file_type = str_reverse(msi.mail.AttachFileNames[i], ".");
 					if(file_type!=NULL)
 					{
-						cout<<"Attached File Name : "<<msi.mail.AttachFileNames[i]<<endl;
-	                    cout<<"Attached File Type : "<<file_type<<endl;
-	                    cout<<"Attached File Size : "<<msi.mail.AttachFileLength[i]<<endl;
+						cout<<"附带文件名称 : "<<msi.mail.AttachFileNames[i]<<endl;
+	                    cout<<"附带文件类型 : "<<file_type<<endl;
+	                    cout<<"附带文件大小 : "<<msi.mail.AttachFileLength[i]<<endl;
 
 						if(strstr(FILTER_TYPE,file_type)!=NULL)
 						{
 							//如果是.jpg、png则存储附件
 							StoreAttachFiles(msi.mail.AttachFileNames[i],msi.mail.AttachFileLength[i],msi.mail.AttachFileContent[i]);
-							cout<<"Start Picture Analysis..."<<endl;
+							cout<<"开始进行隐写分析..."<<endl;
 							//int result=steganalysis(msi.mail.AttachFileContent[i],msi.mail.AttachFileLength[i], msi.mail.AttachFileNames[i],*setting);
 							//用于暂时性规避,PNG图像只能写到硬盘,而非内存数据
 							char filepath[100];
@@ -124,7 +125,7 @@ void SmtpParse(char *data, int opt_num)
 							strcat(filepath,msi.mail.AttachFileNames[i]);
 							int result=steganalysis(msi.mail.AttachFileContent[i],msi.mail.AttachFileLength[i],filepath ,*setting);
 
-							cout<<"the result is : "<<result<<endl;
+							cout<<"初步分析结果: "<<result<<endl;
 							msi.mail.AnalysisResults.push_back(result);
 						}
 						else//其它文件类型
@@ -139,20 +140,29 @@ void SmtpParse(char *data, int opt_num)
 							qt_file_ids+=",";
 						}
 					}
-				}
-
-				if(qt_file_ids.size()!=0)
-				{
-					int qt_service_id =qt.set_qt_service(msi,qt_file_ids);
-
-					for(int i=0;i<msi.mail.AttachFileNames.size();i++)
+					else
 					{
-						if (msi.mail.AnalysisResults[i] == 1)
-						{
-							qt.set_qt_alert(msi,qt_service_id, i);
-						}
+						msi.mail.AnalysisResults.push_back(-100);   //文件名称格式错误
 					}
 				}
+
+				int qt_service_id;
+				if(qt_file_ids.size()!=0)
+				{
+					qt_service_id=qt.set_qt_service(msi,qt_file_ids);
+				}
+				for (int i = 0; i < msi.mail.AttachFileNames.size(); i++) {
+					if (msi.mail.AnalysisResults[i] == 1) {
+					qt.set_qt_alert(msi, qt_service_id, i);
+				}
+				else {	//删除文件
+					char file_to_delete[100];
+					strcpy(file_to_delete, PICTURE_TO_STORE);
+					strcat(file_to_delete, msi.mail.AttachFileNames[i]);
+					remove(file_to_delete);
+				}
+			}
+
 
 				qt.Commit();
 

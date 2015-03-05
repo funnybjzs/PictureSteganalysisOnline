@@ -25,6 +25,8 @@ TcpServer::TcpServer(int listenPort) {
 		throw "listen() failed";
 	}
 
+	cout<<"----------系统服务启动，开始接受数据----------"<<endl;
+
 }
 
 bool TcpServer::Accpet() {
@@ -34,7 +36,7 @@ bool TcpServer::Accpet() {
 		throw "Accept error!";
 		return false;
 	} else {
-		printf("Received a client connection from %s\n",
+		printf("开始接受客户端的网络连接： %s\n",
 				(char*) inet_ntoa(remote_addr.sin_addr));
 		return true;
 	}
@@ -62,7 +64,7 @@ void TcpServer::Start(){
 }
 
 void TcpServer::Stop(){
-	   cout<<"client socket close ..."<<endl;
+	 //  cout<<"client socket close ..."<<endl;
 		close(client_fd);
 	//close(socket_fd);
 }

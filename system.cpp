@@ -11,9 +11,9 @@
  sys_setting  *setting;
 
  //工程部
- //QTDatabase qt("192.168.1.60","1521","meta","qt","qt");
+ QTDatabase qt("192.168.1.60","1521","meta","qt","qt");
 
- QTDatabase qt("192.168.119.128","1521","orcl","scott","tiger");
+ //QTDatabase qt("192.168.119.128","1521","orcl","scott","tiger");
 
 void InitSystemEnv()
 {
@@ -21,12 +21,12 @@ void InitSystemEnv()
 	string jpeg_model("/home/zhaoshuo/lab/platform/model/jpeg_model/");
 	string spatial_model("/home/zhaoshuo/lab/platform/model/spatial_model/");
 	setting =new sys_setting(jpeg_model, spatial_model, "");
-	cout<<"------Model loaded OK ! ------"<<endl;
+	cout<<"------分类器模板载入OK ! ------"<<endl;
 
 	//链接数据库，准备相关资源
 	if(qt.Init())
 	{
-		 cout<<"----------All Init Finish !-----------"<<endl;
+		 cout<<"----------系统环境准备OK !-----------"<<endl;
 	}
 }
 

@@ -49,20 +49,20 @@ bool QTDatabase::Init()
 	try
 	{
          env=Environment::createEnvironment(Environment::DEFAULT);
-		 cout<<"Database Environment Init OK !" <<endl;
+		 cout<<"数据库资源初始化OK !" <<endl;
 
 		 conn = env->createConnection(username_, password_,connection);
-		 cout<<"Database Connection Init OK !" <<endl;
+		 cout<<"数据库连接初始化OK !" <<endl;
 
 		 st=conn->createStatement();
-		 cout<<"Database SQL Init OK!"<<endl;
+		 cout<<"数据库SQL语句初始化OK!"<<endl;
 
-		 cout<<"----------Database Environment Init Finish !-----------"<<endl;
+		 cout<<"----------数据库环境准备OK !-----------"<<endl;
 
 		 //获取设备信息表id,需要综合管理界面配好之后，人工告知，也可以通过数据库EQU_IP查询
-		 qt_equ_info_id=10;  //人工添加设备后得到的id
-		 qt_alert_type_id=set_qt_alert_type();
-
+		 qt_equ_info_id=2;  //人工添加设备后得到的id
+		//qt_alert_type_id=set_qt_alert_type();
+		 qt_alert_type_id=89; //人工获取
 		 return true	;
 	}
 	catch(SQLException e)
@@ -111,7 +111,7 @@ string QTDatabase::set_qt_file(char *file_name,int file_len,char *file_type,char
 				st->setInt(3,-1);
 			}
 			st->setString(4, file_path);
-			st->setString(5,"this is a stego picture");
+			st->setString(5,"图像隐写文件");
 
 			st->executeUpdate();
 //	       conn->commit();
@@ -122,7 +122,7 @@ string QTDatabase::set_qt_file(char *file_name,int file_len,char *file_type,char
 			{
 				file_id=rs->getString(1);
 			}
-			cout<<"Inert Table QT_FILE  OK! "<<endl;
+			//cout<<"Inert Table QT_FILE  OK! "<<endl;
 			return file_id;
 		}
 		catch (SQLException e)
@@ -149,7 +149,7 @@ int QTDatabase::set_qt_alert_type()
 			{
 				alert_type_id=rs->getInt(1);
 			}
-			cout<<"Inert Table QT_ALERT_TYPE  OK! "<<endl;
+			//cout<<"Inert Table QT_ALERT_TYPE  OK! "<<endl;
 			return alert_type_id;
 		}
 		catch (SQLException e)
@@ -190,7 +190,7 @@ int QTDatabase::set_qt_service(const MailServerInfo &ml,string fileid)
 			{
 				service_id=rs->getInt(1);
 			}
-			cout<<"Inert Table QT_ALERT_SERVICE  OK! "<<endl;
+			//cout<<"Inert Table QT_ALERT_SERVICE  OK! "<<endl;
 			return service_id;
 		}
 		catch (SQLException e)
@@ -229,7 +229,8 @@ void QTDatabase::set_qt_alert(const MailServerInfo &ml,int service_id,int i)
 		st->executeUpdate();
 
 
-		cout<<"Inert Table QT_ALERT  OK! "<<endl;
+		//cout<<"Inert Table QT_ALERT  OK! "<<endl;
+		cout<<"告警写入数据库 OK! "<<endl;
 	}
 	catch (SQLException e)
 	{

@@ -34,7 +34,8 @@ void *SendHeartbeatHandleFun(void *arg)
 }
 void *RecvCmdAndConfigHandleFun(void * arg)
 {
-	RecvCmdAndConfig(CMDANDCONFIGPORT );
+	uint32_t recv_cmd_and_config_port=GetPrivateProfileInt("RecvCmdAndConfig","CmdAndConfigPort",0,"./config.ini");
+	RecvCmdAndConfig(recv_cmd_and_config_port );
 	return (void *) 0;
 }
 

@@ -12,7 +12,6 @@
 //web服务器IP地址和端口 此项以后应该写在xml中
 //#define WEBSERVERIP          "172.16.0.19"          //web服务器IP地址 
 //#define WEBSERVERPORT        12345                //web服务器端口号
-#define CMDANDCONFIGPORT     12346
 
 //心跳的两种状态
 #define HEARTSERVICECLOSE    0x1f                 //程序启动 人为关闭

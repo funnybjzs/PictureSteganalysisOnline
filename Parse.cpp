@@ -51,25 +51,29 @@ void ParseBody(char *buffer, int opt_num) {
 	service = GetServiceType(buffer);
 
 	if (service != NULL) {
-//		cout<<"Service Parse OK!"<<endl;
-//		cout<<"Service is :"<<service<<endl;
+		cout<<"应用层数据解析OK!"<<endl;
+		cout<<"服务类型 :"<<service<<endl;
 
 		if (strcmp(service, "SERVICE_HTTP") == 0) {
 //			cout<<"Service Parse OK!"<<endl;
 //			cout<<"Service is :"<<service<<endl;
-		//	HttpParse(buffer, opt_num);
+//					cout<<"应用层数据解析OK!"<<endl;
+//					cout<<"服务类型 :"<<service<<endl;
+		         	HttpParse(buffer, opt_num);
+	//	            cout<<"-----------------------解析完成 !"<<endl;
 		}
 		else if (strcmp(service, "SERVICE_SMTP") == 0) {
-			cout<<"Service Parse OK!"<<endl;
-			cout<<"Service is :"<<service<<endl;
+//			cout<<"应用层数据解析OK!"<<endl;
+//			cout<<"服务类型 :"<<service<<endl;
 			SmtpParse(buffer, opt_num);
+//			cout<<"-----------------------解析完成 !"<<endl;
 		}
 		else  //其它应用层数据类型
 		{
-			//cout << "-----Other Application Data------" << endl;
+			cout << "-----其它类型应用层数据------" << endl;
 		}
 
-	//	cout<<"-----------------------parse finish!"<<endl;
+		cout<<"-----------------------解析完成 !"<<endl;
 	}
 
 	free(service);
