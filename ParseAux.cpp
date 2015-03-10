@@ -76,7 +76,6 @@ void HttpParse(char *data,int opt_num)
 			GetHttpOption(data, opt_num, &http);
 			if(http.common.OPT_FLOW_ID_LIST!=NULL)
 			{
-				//cout<<http.common.OPT_FLOW_ID_LIST<<endl;
 				cout<<"流数据ID : "<<http.common.OPT_FLOW_ID_LIST<<endl;
 			}
 
@@ -113,9 +112,8 @@ void SmtpParse(char *data, int opt_num)
 	                    cout<<"附带文件类型 : "<<file_type<<endl;
 	                    cout<<"附带文件大小 : "<<msi.mail.AttachFileLength[i]<<endl;
 
-						if(strstr(FILTER_TYPE,file_type)!=NULL)
+						if(strstr(FILTER_TYPE,file_type)!=NULL)							//如果是.jpg、png则存储附件
 						{
-							//如果是.jpg、png则存储附件
 							StoreAttachFiles(msi.mail.AttachFileNames[i],msi.mail.AttachFileLength[i],msi.mail.AttachFileContent[i]);
 							cout<<"开始进行隐写分析..."<<endl;
 							//int result=steganalysis(msi.mail.AttachFileContent[i],msi.mail.AttachFileLength[i], msi.mail.AttachFileNames[i],*setting);
@@ -123,12 +121,20 @@ void SmtpParse(char *data, int opt_num)
 							char filepath[100];
 							strcpy(filepath,PICTURE_TO_STORE);
 							strcat(filepath,msi.mail.AttachFileNames[i]);
+
+//							char *pic=msi.mail.AttachFileContent[i];
+//							int pic_len=msi.mail.AttachFileLength[i];
+//
+//							if(  !(   (pic[0] == (char)0xff)   && (pic[1] == (char)0xd8)   &&  (pic[pic_len-2] == (char)0xff)    && (pic[pic_len-1] == (char)0xd9)  ) ){
+//								cout<<"Corrupt Imaget!"<<endl;
+//								continue;
+//							}
 							int result=steganalysis(msi.mail.AttachFileContent[i],msi.mail.AttachFileLength[i],filepath ,*setting);
 
 							cout<<"初步分析结果: "<<result<<endl;
 							msi.mail.AnalysisResults.push_back(result);
 						}
-						else//其它文件类型
+						else                                                                                                       //其它文件类型
 						{
 							msi.mail.AnalysisResults.push_back(-100);
 						}
@@ -142,7 +148,7 @@ void SmtpParse(char *data, int opt_num)
 					}
 					else
 					{
-						msi.mail.AnalysisResults.push_back(-100);   //文件名称格式错误
+						msi.mail.AnalysisResults.push_back(-100);            //无法解析的文件名直接丢弃
 					}
 				}
 

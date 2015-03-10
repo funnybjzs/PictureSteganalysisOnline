@@ -51,29 +51,24 @@ void ParseBody(char *buffer, int opt_num) {
 	service = GetServiceType(buffer);
 
 	if (service != NULL) {
-		cout<<"应用层数据解析OK!"<<endl;
-		cout<<"服务类型 :"<<service<<endl;
+//		cout<<"应用层数据解析OK!"<<endl;
+//		cout<<"服务类型 :"<<service<<endl;
 
 		if (strcmp(service, "SERVICE_HTTP") == 0) {
-//			cout<<"Service Parse OK!"<<endl;
-//			cout<<"Service is :"<<service<<endl;
-//					cout<<"应用层数据解析OK!"<<endl;
-//					cout<<"服务类型 :"<<service<<endl;
 		         	HttpParse(buffer, opt_num);
-	//	            cout<<"-----------------------解析完成 !"<<endl;
 		}
 		else if (strcmp(service, "SERVICE_SMTP") == 0) {
-//			cout<<"应用层数据解析OK!"<<endl;
-//			cout<<"服务类型 :"<<service<<endl;
-			SmtpParse(buffer, opt_num);
-//			cout<<"-----------------------解析完成 !"<<endl;
+					cout<<"应用层数据解析OK!"<<endl;
+					cout<<"服务类型 :"<<service<<endl;
+			       SmtpParse(buffer, opt_num);
+			       cout<<"-----------------------解析完成 !"<<endl;
 		}
 		else  //其它应用层数据类型
 		{
-			cout << "-----其它类型应用层数据------" << endl;
+			//cout << "-----其它类型应用层数据------" << endl;
 		}
 
-		cout<<"-----------------------解析完成 !"<<endl;
+		//cout<<"-----------------------解析完成 !"<<endl;
 	}
 
 	free(service);
@@ -91,18 +86,25 @@ char* GetServiceType(char *data) {
 	//选项名称
 	sscanf(index, "%s%n", eachline, &line_length);
 	sscanf(eachline, "%*[^:]:%[^\r\n]", opt_name);
-	index = index + line_length + 2;
+	if(strcmp(opt_name,"OPT_SERVICE")==0)
+	{
+		index = index + line_length + 2;
 
-	//选项内容长度
-	sscanf(index, "%s%n", eachline, &line_length);
-	sscanf(eachline, "%*[^:]:%[^\r\n]", opt_len);
-	index = index + line_length + 2;
+		//选项内容长度
+		sscanf(index, "%s%n", eachline, &line_length);
+		sscanf(eachline, "%*[^:]:%[^\r\n]", opt_len);
+		index = index + line_length + 2;
 
-	//选项内容,是否考虑用calloc;
-	char *service = (char *)malloc(atoi(opt_len)+1);
-	memset(service, 0, atoi(opt_len) + 1);
-	memcpy(service, index, atoi(opt_len));
-	return service;
+		//选项内容,是否考虑用calloc;
+		char *service = (char *)malloc(atoi(opt_len)+1);
+		memset(service, 0, atoi(opt_len) + 1);
+		memcpy(service, index, atoi(opt_len));
+		return service;
+	}
+	else
+	{
+		return NULL;
+	}
 }
 
 void InitHttpServerInfo(HttpServerInfo *hsi) {

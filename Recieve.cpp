@@ -34,7 +34,6 @@ void RecieveData(char *data, int len, int sckfd) {
 //				printf("%c", left_data[i]);
 //			}
 //			printf("......\n");
-
 			left_length = RecieveLoop(left_data, left_length, sckfd);
 		} else {
 			;
@@ -48,7 +47,6 @@ void RecieveData(char *data, int len, int sckfd) {
 //				printf("%c", left_data[i]);
 //			}
 //			printf("......\n");
-
 			ParseBody(left_data, atoi(head.option[OPT_NUM]));
 			left_length -= atoi(head.option[CONT_LENGTH]);
 
@@ -72,50 +70,67 @@ void RecieveData(char *data, int len, int sckfd) {
 int RecieveLoop(char *data, int left_len, int sckfd) {
 	while (left_len > 0) {
 		if (strstr(data, "\r\n\r\n")) //长度够数据头
-				{
+		{
 			int head_len = ParseHead(data, &head);
 			//发送确认消息
 			SendConfirmMsg(&head, sckfd);
-			left_len -= head_len;
-			data = data + head_len;
+			left_len = left_len-head_len;
 			int body_len = atoi(head.option[CONT_LENGTH]);
-			//剩余长度够数据体
-			if (left_len >= body_len) {
-//				printf("body length: %d...\n", atoi(head.option[CONT_LENGTH]));
-				ParseBody(data, atoi(head.option[OPT_NUM]));
-				left_len = left_len - body_len;
-
-				//剩余长度刚好够数据体
-				if (left_len == 0) {
+			if(body_len==0)	            //数据体为空
+			{
+				FreeAppHead(&head);
+				if(left_len==0)	          //恰好够数据头解析完
+				{
 					isHeadStart = true;
 					free(left_data);
 					left_data = NULL;
-					FreeAppHead(&head);
-					break;
-				} else //继续解析下一个
+				}
+				else
 				{
-					data = data + body_len;
-					FreeAppHead(&head);
+					data = data + head_len;
+					continue;
 				}
-			} else //剩余长度不够数据体
+			}
+			else   							//数据体不为空
 			{
-				isHeadStart = false;
-				if (left_len == 0) //刚好够数据头
-						{
-					free(left_data);
-					left_data = NULL;
-					break;
-				} else {
-					char *tmp = (char *)malloc(left_len + 1);
-					memset(tmp, 0, left_len + 1);
-					memcpy(tmp, data, left_len);
-					free(left_data);
-					left_data = NULL;
-					left_data = tmp;
-					tmp = NULL;
-					break;
-				}
+				data = data + head_len;
+				//剩余长度够数据体
+				if (left_len >= body_len) {
+	//				printf("body length: %d...\n", atoi(head.option[CONT_LENGTH]));
+					ParseBody(data, atoi(head.option[OPT_NUM]));
+					left_len = left_len - body_len;
 
+					//剩余长度刚好够数据体
+					if (left_len == 0) {
+						isHeadStart = true;
+						free(left_data);
+						left_data = NULL;
+						FreeAppHead(&head);
+//						break;
+					} else //继续解析下一个
+					{
+						data = data + body_len;
+						FreeAppHead(&head);
+					}
+				} else //剩余长度不够数据体
+				{
+					isHeadStart = false;
+					if (left_len == 0) //刚好够数据头
+							{
+						free(left_data);
+						left_data = NULL;
+						break;
+					} else {
+						char *tmp = (char *)malloc(left_len + 1);
+						memset(tmp, 0, left_len + 1);
+						memcpy(tmp, data, left_len);
+						free(left_data);
+						left_data = NULL;
+						left_data = tmp;
+						tmp = NULL;
+						break;
+					}
+				}
 			}
 		} else      //不够数据头
 		{

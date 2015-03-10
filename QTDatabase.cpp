@@ -60,9 +60,9 @@ bool QTDatabase::Init()
 		 cout<<"----------数据库环境准备OK !-----------"<<endl;
 
 		 //获取设备信息表id,需要综合管理界面配好之后，人工告知，也可以通过数据库EQU_IP查询
-		 qt_equ_info_id=2;  //人工添加设备后得到的id
+		 qt_equ_info_id=10;  //人工添加设备后得到的id
 		//qt_alert_type_id=set_qt_alert_type();
-		 qt_alert_type_id=89; //人工获取
+		 qt_alert_type_id=161; //人工获取
 		 return true	;
 	}
 	catch(SQLException e)

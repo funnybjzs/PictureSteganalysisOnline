@@ -11,9 +11,9 @@
  sys_setting  *setting;
 
  //工程部
- QTDatabase qt("192.168.1.60","1521","meta","qt","qt");
+ //QTDatabase qt("192.168.1.60","1521","meta","qt","qt");
 
- //QTDatabase qt("192.168.119.128","1521","orcl","scott","tiger");
+ QTDatabase qt("192.168.119.128","1521","orcl","scott","tiger");
 
 void InitSystemEnv()
 {
