@@ -13,11 +13,12 @@
 #include <iostream>
 #include "include/stego_analysis.h"
 #include "QTDatabase.h"
+//#include "StegoConfig.h"
 
 using namespace std;
 
 //初始化数据库环境资源
-void InitSystemEnv();
+void InitSystemEnv(char *xmlfile);
 
 //释放数据库环境资源
 void FreeSystemEnv();

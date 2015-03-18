@@ -231,31 +231,28 @@ void SetFileInnerOption(MailServerInfo *mf,char *opt_name,int length,char *index
 //[输入]*mf:存放解析内容的结构体；length:四元组选项的长度
 void SetMailTuple4list(MailServerInfo *mf,int length)
 {
-	char src[32];
-	char dst[256];
+	char src[22];
+	char dst[22];
 
+	//printf("%s\n",hp->common.OPT_TUPLE4_LIST);
 	sscanf(mf->common.OPT_TUPLE4_LIST,"%[^-]",src);
-	sscanf(mf->common.OPT_TUPLE4_LIST,"%*[^-]-%s",dst);
+	sscanf(mf->common.OPT_TUPLE4_LIST,"%*[^-]-%[^,]",dst);
 
-    mf->common.OPT_CLIENT_IP=(char *)malloc(length+1);
-    memset(mf->common.OPT_CLIENT_IP,0,length+1);
+    mf->common.OPT_CLIENT_IP=(char *)malloc(15+1);
+    memset(mf->common.OPT_CLIENT_IP,0,15+1);
 
-    mf->common.OPT_CLIENT_PORT=(char *)malloc(length+1);
-    memset(mf->common.OPT_CLIENT_PORT,0,length+1);
+    mf->common.OPT_CLIENT_PORT=(char *)malloc(5+1);
+    memset(mf->common.OPT_CLIENT_PORT,0,5+1);
 
-    mf->common.OPT_SERVER_IP=(char *)malloc(length+1);
-    memset(mf->common.OPT_SERVER_IP,0,length+1);
+    mf->common.OPT_SERVER_IP=(char *)malloc(15+1);
+    memset(mf->common.OPT_SERVER_IP,0,15+1);
 
-    mf->common.OPT_SERVER_PORT=(char *)malloc(length+1);
-    memset(mf->common.OPT_SERVER_PORT,0,length+1);
+    mf->common.OPT_SERVER_PORT=(char *)malloc(5+1);
+    memset(mf->common.OPT_SERVER_PORT,0,5+1);
 
 	sscanf(src,"%[^:]",mf->common.OPT_SERVER_IP);
 	sscanf(dst,"%[^:]",mf->common.OPT_CLIENT_IP);
 	sscanf(src,"%*[^:]:%s",mf->common.OPT_SERVER_PORT);
-
-	if(sscanf(dst,"%*[^:]:%[^,]",mf->common.OPT_CLIENT_PORT)==-1)
-	{
-		sscanf(dst,"%*[^:]:%s",mf->common.OPT_CLIENT_PORT);
-	}
+	sscanf(dst, "%*[^:]:%s", mf->common.OPT_CLIENT_PORT);
 }
 

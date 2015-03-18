@@ -41,28 +41,40 @@ bool GetFormatTime(char *time,char *format_time)
 	return result;
 }
 
+QTDatabase::QTDatabase(char *xmlfile)
+{
+	StegoConfig scfg(xmlfile);
+	if(!(scfg.GetDBInfo(dbinfo)&&scfg.GetValue("Database","User",username_)&&scfg.GetValue("Database","Passwd",password_)))
+	{
+		cout<<"配置文件数据库基本信息错误!"<<endl;
+		exit(1);
+	}
+
+	char tmp1[8]={0},tmp2[8]={0};
+	if(!(scfg.GetValue("Database","EquId",tmp1)&&scfg.GetValue("Database","ATypeId",tmp2)))
+	{
+		cout<<"配置文件数据库表信息错误!"<<endl;
+		exit(1);
+	}
+	this->qt_equ_info_id=atoi(tmp1);
+	this->qt_alert_type_id=atoi(tmp2);
+
+}
+
 bool QTDatabase::Init()
 {
-	//初始化数据库环境
-	string connection=host_+":"+port_+"/"+service_;
-
 	try
 	{
          env=Environment::createEnvironment(Environment::DEFAULT);
 		 cout<<"数据库资源初始化OK !" <<endl;
 
-		 conn = env->createConnection(username_, password_,connection);
+		 conn = env->createConnection(username_,password_,dbinfo);
 		 cout<<"数据库连接初始化OK !" <<endl;
 
 		 st=conn->createStatement();
 		 cout<<"数据库SQL语句初始化OK!"<<endl;
 
 		 cout<<"----------数据库环境准备OK !-----------"<<endl;
-
-		 //获取设备信息表id,需要综合管理界面配好之后，人工告知，也可以通过数据库EQU_IP查询
-		 qt_equ_info_id=101;  //人工添加设备后得到的id
-		//qt_alert_type_id=set_qt_alert_type();
-		 qt_alert_type_id=89; //人工获取
 		 return true	;
 	}
 	catch(SQLException e)
@@ -216,7 +228,7 @@ void QTDatabase::set_qt_alert(const MailServerInfo &ml,int service_id,int i)
 		st->setInt(5,1);
 		st->setInt(6,0);
 		st->setInt(7,1);
-		st->setInt(8,1);
+		st->setInt(8,0);
 
 		st->setString(9,ml.common.OPT_FLOW_ID_LIST);
 		st->setInt(10,31);

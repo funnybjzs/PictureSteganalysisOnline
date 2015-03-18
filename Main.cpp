@@ -65,7 +65,7 @@ int main() {
 	try
 	{
 
-		InitSystemEnv();
+		InitSystemEnv("./QTStego.xml");
 
 	    TcpServer tcp(34890);
         while(true){

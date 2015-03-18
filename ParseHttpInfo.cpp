@@ -21,12 +21,28 @@ void GetHttpOption(char *data,int num,HttpServerInfo *hp)
     for(i=0;i<num;i++)
     {
       //选项名称
-      sscanf(index,"%s%n",eachline,&line_length);
-      sscanf(eachline,"%*[^:]:%[^\r\n]",opt_name);
+      int ret_line=sscanf(index,"%s%n",eachline,&line_length);
+      if(ret_line<0)
+      {
+          DebugPrint("can not get from sscanf in get line!");
+          printf("data:%s\n",eachline);
+      }
+
+      int ret_name=sscanf(eachline,"%*[^:]:%[^\r\n]",opt_name);
+      if(ret_name<0)
+      {
+          DebugPrint("can not get from sscanf in get name!");
+      }
       index=index+line_length+2;
 
       //选项内容长度
-      sscanf(index,"%s%n",eachline,&line_length);
+     int ret_opt_len= sscanf(index,"%s%n",eachline,&line_length);
+      if(ret_opt_len<0)
+      {
+          DebugPrint("can not get from sscanf in get len!");
+          printf("data:%s\n",eachline);
+      }
+
       sscanf(eachline,"%*[^:]:%[^\r\n]",opt_len);
       index=index+line_length+2;
 
@@ -167,12 +183,27 @@ void GetHttpInnerOption(HttpServerInfo *hp,char *data,int length,int http_reques
 
     while(total_length<length)
     {
-        sscanf(index,"%s%n",eachline,&line_length);
-        sscanf(eachline,"%*[^:]:%[^\r\n]",opt_name);
+
+        int ret_line=sscanf(index,"%s%n",eachline,&line_length);
+        if(ret_line<0)
+        {
+            DebugPrint("can not get from sscanf in get line!");
+            printf("data:%s\n",eachline);
+        }
+
+       int ret_name= sscanf(eachline,"%*[^:]:%[^\r\n]",opt_name);
+       if(ret_name<0)
+       {
+           DebugPrint("can not get from sscanf in get name!");
+       }
         index=index+line_length+2;
         total_length=total_length+line_length+2;
 
-        sscanf(index,"%s%n",eachline,&line_length);
+      int ret_len= sscanf(index,"%s%n",eachline,&line_length);
+      if(ret_len<0)
+      {
+          DebugPrint("can not get from sscanf in get len!");
+      }
         sscanf(eachline,"%*[^:]:%[^\r\n]",opt_len);
         index=index+line_length+2;
         total_length=total_length+line_length+2;
@@ -617,30 +648,29 @@ void SetHttpInnerOption(HttpServerInfo *hp,char *opt_name,int length,char *index
 //[输入]*hp:存放解析内容的结构体；length:四元组选项的长度
 void SetHttpTuple4list(HttpServerInfo *hp,int length)
 {
-	char src[32];
-	char dst[256];
+	char src[22];
+	char dst[22];
 
+	printf("%s\n",hp->common.OPT_TUPLE4_LIST);
 	sscanf(hp->common.OPT_TUPLE4_LIST,"%[^-]",src);
-	sscanf(hp->common.OPT_TUPLE4_LIST,"%*[^-]-%s",dst);
+	sscanf(hp->common.OPT_TUPLE4_LIST,"%*[^-]-%[^,]",dst);
+	printf("%s\n",src);printf("%s\n",dst);
 
-    hp->common.OPT_CLIENT_IP=(char *)malloc(length+1);
-    memset(hp->common.OPT_CLIENT_IP,0,length+1);
+    hp->common.OPT_CLIENT_IP=(char *)malloc(15+1);
+    memset(hp->common.OPT_CLIENT_IP,0,15+1);
 
-    hp->common.OPT_CLIENT_PORT=(char *)malloc(length+1);
-    memset(hp->common.OPT_CLIENT_PORT,0,length+1);
+    hp->common.OPT_CLIENT_PORT=(char *)malloc(5+1);
+    memset(hp->common.OPT_CLIENT_PORT,0,5+1);
 
-    hp->common.OPT_SERVER_IP=(char *)malloc(length+1);
-    memset(hp->common.OPT_SERVER_IP,0,length+1);
+    hp->common.OPT_SERVER_IP=(char *)malloc(15+1);
+    memset(hp->common.OPT_SERVER_IP,0,15+1);
 
-    hp->common.OPT_SERVER_PORT=(char *)malloc(length+1);
-    memset(hp->common.OPT_SERVER_PORT,0,length+1);
+    hp->common.OPT_SERVER_PORT=(char *)malloc(5+1);
+    memset(hp->common.OPT_SERVER_PORT,0,5+1);
 
 	sscanf(src,"%[^:]",hp->common.OPT_SERVER_IP);
 	sscanf(dst,"%[^:]",hp->common.OPT_CLIENT_IP);
 	sscanf(src,"%*[^:]:%s",hp->common.OPT_SERVER_PORT);
+	sscanf(dst, "%*[^:]:%s", hp->common.OPT_CLIENT_PORT);
 
-	if(sscanf(dst,"%*[^:]:%[^,]",hp->common.OPT_CLIENT_PORT)==-1)
-	{
-		sscanf(dst, "%*[^:]:%s", hp->common.OPT_CLIENT_PORT);
-	}
 }

@@ -11,7 +11,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include "systemall.h"
+
+#define DEBUG
+
+#ifdef DEBUG
+#define DebugPrint(errormsg)       fprintf(stderr,"File : %s, Line: %d, func: %s , errno:%d, strerror: %s, diag: %s\n",__FILE__,__LINE__,__func__,errno,strerror(errno),errormsg);
+#else
+#define DebugPrint(errormsg)
+#endif
 
 const static char FILTER_TYPE[]=".png,.jpg";
 //通用解析
@@ -34,6 +43,7 @@ void SetMailTuple4list(MailServerInfo *mf,int length);
 //http处理
 void InitHttpServerInfo(HttpServerInfo *hp);
 void FreeHttpServerInfo(HttpServerInfo *hp);
+void InitAppHead(AppData_Head *head);
 void FreeAppHead(AppData_Head *head);
 int HasResponseOpt(HttpServerInfo *hsi);
 //mail处理

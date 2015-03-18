@@ -30,10 +30,10 @@ void RecieveData(char *data, int len, int sckfd) {
 				{    //调试打印
 //			printf("head...\n");
 //			int i;
-//			for (i = 0; i < 20; ++i) {
+//			for (i = 0; i < 32; ++i) {
 //				printf("%c", left_data[i]);
 //			}
-//			printf("......\n");
+//			printf("\n......\n");
 			left_length = RecieveLoop(left_data, left_length, sckfd);
 		} else {
 			;
@@ -41,12 +41,12 @@ void RecieveData(char *data, int len, int sckfd) {
 	} else {
 		if (atoi(head.option[CONT_LENGTH]) <= left_length) {
 			//调试打印
-//			printf("body length: %d...\n", atoi(head.option[CONT_LENGTH]));
+//			printf("[recv]:body length: %d...\n", atoi(head.option[CONT_LENGTH]));
 //			int i;
-//			for (i = 0; i < 20; ++i) {
+//			for (i = 0; i <32; ++i) {
 //				printf("%c", left_data[i]);
 //			}
-//			printf("......\n");
+//			printf("\n......\n");
 			ParseBody(left_data, atoi(head.option[OPT_NUM]));
 			left_length -= atoi(head.option[CONT_LENGTH]);
 
@@ -71,7 +71,18 @@ int RecieveLoop(char *data, int left_len, int sckfd) {
 	while (left_len > 0) {
 		if (strstr(data, "\r\n\r\n")) //长度够数据头
 		{
+//						printf("head...\n");
+//						int i;
+//						for (i = 0; i < 32; ++i) {
+//							printf("%c", left_data[i]);
+//						}
 			int head_len = ParseHead(data, &head);
+//			printf("\nhead length : %d......\n",head_len);
+//			int m;
+//			for (m = 0; m < head_len; ++m) {
+//				printf("%c", left_data[m]);
+//			}
+//			printf("\n....\n");
 			//发送确认消息
 			SendConfirmMsg(&head, sckfd);
 			left_len = left_len-head_len;
@@ -96,7 +107,13 @@ int RecieveLoop(char *data, int left_len, int sckfd) {
 				data = data + head_len;
 				//剩余长度够数据体
 				if (left_len >= body_len) {
-	//				printf("body length: %d...\n", atoi(head.option[CONT_LENGTH]));
+//					printf("[Loop]:body length: %d...\n", atoi(head.option[CONT_LENGTH]));
+//								printf("head...\n");
+//								int j;
+//								for (j = 0; j < 32; ++j) {
+//									printf("%c", left_data[j]);
+//								}
+//								printf("\n......\n");
 					ParseBody(data, atoi(head.option[OPT_NUM]));
 					left_len = left_len - body_len;
 

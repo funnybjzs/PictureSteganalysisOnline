@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<SteganalysisOnline>
+	<Picture version="1.0">
+	<Database>
+		<Ip>192.168.1.60</Ip>
+		<Port>1521</Port>
+		<User>qt</User>
+		<Passwd>qt</Passwd>
+		<Sid>meta</Sid>
+		<EquId>128</EquId>
+		<ATypeId>89</ATypeId>
+	</Database>
+	<Common type="ignore">
+		<TypeFilter>.jpg,.png</TypeFilter>
+		<Size unit="byte">1000000</Size>
+		<SavePath>/home/zhaoshuo/storepicture/</SavePath>
+	</Common>
+	<Steganalysis>
+		<FeatureName type="JPG">PENV548</FeatureName>
+		<FeatureName type="PNG">SPAM</FeatureName>
+		<LIBPATH>./lib/</LIBPATH>
+		<Dependencies><!--some dependency files ,like exe, .txt--></Dependencies>
+	</Steganalysis>
+	<Classifier>
+		<Name>SVM</Name>
+		<ModelPath type="jpg">./model/jpeg_model/</ModelPath>
+		<ModelPath type="png">./model/spatial_model/</ModelPath>
+		<Var>s=0; t=2; d=0; g=0.001; ga=0; r=0; c=1000; DimRange=1; key=1;</Var>
+		<Threshlod>-1,1</Threshlod>
+	</Classifier>
+	</Picture>
+</SteganalysisOnline>

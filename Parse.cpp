@@ -15,6 +15,8 @@ int ParseHead(char *data, AppData_Head *head) {
 	char content[100];  //分段内容
 	int total_length = 0; //总长度
 
+	InitAppHead(head);
+
 	while (frag_indicator < APPDATA_HEARD_STARTNUM + APPDATA_HEARD_OPTNUM) {
 		sscanf(p, "%s%n", content, &frag_length);           //得到分片数据和其长度
 		//printf("%s %d\n",content,frag_length);
@@ -37,7 +39,19 @@ int ParseHead(char *data, AppData_Head *head) {
 		frag_indicator++;
 		total_length+=frag_length;
 
+		if((*(p+2)=='\r')&&(*(p+3)=='\n'))
+		{
+			break;
+		}
 	}
+
+//	int m;
+//	printf("head...\n");
+//	for(m=0;m++;m<=32)
+//	{
+//		printf("%s",data[m]);
+//	}
+//	printf("..............\n");
 
 		return total_length + 4;
 
@@ -46,16 +60,23 @@ int ParseHead(char *data, AppData_Head *head) {
 //[输入]buffer:待解析的数据，opt_num:选项数量
 //[输出]无
 void ParseBody(char *buffer, int opt_num) {
+//	int m;
+//	printf("body...\n");
+//	for(m=0;m++;m<=32)
+//	{
+//		printf("%s",buffer[m]);
+//	}
+//	printf(".............\n");
 	//首先判断服务类型
 	char *service = NULL;
 	service = GetServiceType(buffer);
 
 	if (service != NULL) {
-//		cout<<"应用层数据解析OK!"<<endl;
-//		cout<<"服务类型 :"<<service<<endl;
+	//	cout<<"应用层数据解析OK!"<<endl;
+	//	cout<<"服务类型 :"<<service<<endl;
 
 		if (strcmp(service, "SERVICE_HTTP") == 0) {
-		         	HttpParse(buffer, opt_num);
+		         //	HttpParse(buffer, opt_num);
 		}
 		else if (strcmp(service, "SERVICE_SMTP") == 0) {
 					cout<<"应用层数据解析OK!"<<endl;
@@ -65,10 +86,10 @@ void ParseBody(char *buffer, int opt_num) {
 		}
 		else  //其它应用层数据类型
 		{
-			//cout << "-----其它类型应用层数据------" << endl;
+		//	cout << "-----其它类型应用层数据------" << endl;
 		}
 
-		//cout<<"-----------------------解析完成 !"<<endl;
+	//	cout<<"-----------------------解析完成 !"<<endl;
 	}
 
 	free(service);
@@ -266,6 +287,14 @@ void FreeHttpServerInfo(HttpServerInfo *hsi) {
 	free(hsi->http_response.opt_user_agent);
 	free(hsi->http_response.opt_via);
 	free(hsi->http_response.opt_x_flash_version);
+}
+
+void InitAppHead(AppData_Head *head)
+{
+	int i;
+	for (i = 0; i < APPDATA_HEARD_OPTNUM + APPDATA_HEARD_STARTNUM; i++) {
+			head->option[i]=NULL;
+	}
 }
 
 void FreeAppHead(AppData_Head *head) {

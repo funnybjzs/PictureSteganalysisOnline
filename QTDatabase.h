@@ -14,6 +14,7 @@
 #include <cstring>
 #include "AppDataDefine.h"
 #include "occi.h"
+#include "StegoConfig.h"
 
 using namespace std;
 using namespace oracle::occi;
@@ -21,8 +22,7 @@ using namespace oracle::occi;
 class QTDatabase
 {
 	public :
-		QTDatabase(string  host,string port,string service,string username,string password ):
-			host_(host),port_(port),service_(service),username_(username),password_(password){};
+		QTDatabase(char  *xmlfile);
 		virtual ~QTDatabase(){};
 
 		bool  Init();
@@ -35,11 +35,9 @@ class QTDatabase
 
 	private:
 		//物理信息
-		string  host_;
-		string  port_;
-		string  service_;
-		string  username_;
-		string  password_;
+		char dbinfo[32];
+		char  username_[16];
+		char  password_[16];
 
 		//数据库环境句柄
 		 Environment *env;

@@ -46,12 +46,16 @@ void TcpServer::RecvMsg() {
 	char buffer[MAXSIZE];
 	memset(buffer, 0, MAXSIZE);
 	int len = 0;
+ // cout<<"准备开始接收数据..."<<endl;
 	while (((len = recv(client_fd, buffer, MAXSIZE, 0)) > 0)
 			&& (heartCondition == true)) {
+	//	cout<<"接收数据大小： "<<len<<endl;
 		RecieveData(buffer, len, client_fd);
 		  memset(buffer, 0, MAXSIZE);
+	   // cout<<"接收完毕： "<<endl;
 	}
 	ClearAllTmpData();
+	//cout<<"退出断开连接"<<endl;
 }
 
 void TcpServer::Start(){
