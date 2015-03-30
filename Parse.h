@@ -22,7 +22,6 @@
 #define DebugPrint(errormsg)
 #endif
 
-const static char FILTER_TYPE[]=".png,.jpg";
 //通用解析
 int ParseHead(char *data,AppData_Head *head);
 void ParseBody(char *buffer,int opt_num);

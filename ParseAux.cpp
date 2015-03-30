@@ -8,8 +8,8 @@
 #include "QTDatabase.h"
 #include <string>
 
-char PICTURE_TO_STORE[50]="/home/zhaoshuo/storepicture/";
-
+extern char PICTURE_TO_STORE[64];
+extern char FILTER_TYPE[32];
 extern sys_setting  *setting;
 extern QTDatabase qt;
 
@@ -64,7 +64,7 @@ string  WritingAlerts(const MailServerInfo & msi,int index,char *type,char path[
 		}
 		else
 		{
-			cout<<"其它类型数据或数据错误..."<<endl<<endl;				//其它处理返回值，包括数据出错、其它文件类型等
+			cout<<"数据错误或未知错误..."<<endl;				//其它处理返回值，包括数据出错、其它文件类型等
 			return "";
 		}
 }
@@ -162,6 +162,7 @@ void DetectAttachments(MailServerInfo msi)
 			}
 			else                                                                                                       //其它文件类型
 			{
+				cout<<"其它类型数据..."<<endl;
 				msi.mail.AnalysisResults.push_back(-100);
 			}
 
