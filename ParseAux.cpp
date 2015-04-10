@@ -145,14 +145,24 @@ void DetectAttachments(MailServerInfo msi)
 					}
 					else
 					{
-						int result=steganalysis(msi.mail.AttachFileContent[i],msi.mail.AttachFileLength[i],filepath ,*setting);
+				        int result= 0;
+				        double deciVal = 0.0;
+
+				        ////这个是分析过程
+				        int errorCode = steganalysis(msi.mail.AttachFileContent[i], msi.mail.AttachFileLength[i],filepath, *setting, result, deciVal);
+				        cout << "decision value: " << deciVal << endl;
 						cout<<"初步分析结果: "<<result<<endl;
 						msi.mail.AnalysisResults.push_back(result);
 					}
 				}
 				else if(strcmp(file_type,".png")==0)
 				{
-					int result=steganalysis(msi.mail.AttachFileContent[i],msi.mail.AttachFileLength[i],filepath ,*setting);
+			        int result= 0;
+			        double deciVal = 0.0;
+
+			        ////这个是分析过程
+			        int errorCode = steganalysis(msi.mail.AttachFileContent[i], msi.mail.AttachFileLength[i],filepath, *setting, result, deciVal);
+			        cout << "decision value: " << deciVal << endl;
 					cout<<"初步分析结果: "<<result<<endl;
 					msi.mail.AnalysisResults.push_back(result);
 				}
