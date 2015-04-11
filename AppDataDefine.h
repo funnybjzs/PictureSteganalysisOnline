@@ -102,6 +102,7 @@ typedef struct {
 	vector<char *>AttachFileContent;
 	//检测结果
 	vector<double> AnalysisResults;
+	vector<double > LevelResults;
 }Mail_Option;
 
 typedef struct {

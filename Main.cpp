@@ -67,7 +67,7 @@ int main() {
 
 		InitSystemEnv("./QTStego.xml");
 
-	    TcpServer tcp(34890);
+	    TcpServer tcp(34891);
         while(true){
 	    tcp.Start();
 	    //tcp.Stop();

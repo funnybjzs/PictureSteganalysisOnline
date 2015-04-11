@@ -8,10 +8,10 @@
 #include "QTDatabase.h"
 #include <string>
 
-extern char PICTURE_TO_STORE[64];
-extern char FILTER_TYPE[32];
-extern sys_setting  *setting;
-extern QTDatabase qt;
+char PICTURE_TO_STORE[64];
+char FILTER_TYPE[32];
+sys_setting  *setting;
+QTDatabase qt;
 
 //通用解析。处理文件名，从右边过滤文件类型
 char* str_reverse(char *s1,char const *s2)
@@ -49,26 +49,6 @@ void StoreAttachFiles(char *file_name,int file_length,char *file_content)
 	fclose(pFile);
 }
 
-//分析结果写告警到数据库
-string  WritingAlerts(const MailServerInfo & msi,int index,char *type,char path[])
-{
-		if (msi.mail.AnalysisResults[index] == 1) {  //有隐写则写入file表
-			if (msi.common.OPT_TUPLE4_LIST != NULL) {
-				cout<<"检测到可疑文件!"<<endl<<endl;
-				return qt.set_qt_file(msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],type,path);
-			}
-		}
-		else if(msi.mail.AnalysisResults[index]==0) { 	//无隐写
-			cout<<"检测正常!"<<endl<<endl;
-			return "";
-		}
-		else
-		{
-			cout<<"数据错误或未知错误..."<<endl;				//其它处理返回值，包括数据出错、其它文件类型等
-			return "";
-		}
-}
-
 void HttpParse(char *data,int opt_num)
 {
 			HttpServerInfo http;
@@ -100,7 +80,7 @@ void SmtpParse(char *data, int opt_num)
 			//附件不为空
 		   if(msi.mail.AttachFileNames.size()!=0 && msi.mail.AttachFileContent.size()!=0)
 		   {	//遍历附件
-			   DetectAttachments(msi);
+			   ProcessSmtpAttachments(msi);
 		   }
 		   else
 		   {
@@ -111,9 +91,10 @@ void SmtpParse(char *data, int opt_num)
 	FreeMailServerInfo(&msi);
 }
 
-void DetectAttachments(MailServerInfo msi)
+
+//检测附件
+void DetectAttachments(MailServerInfo & msi)
 {
-	string qt_file_ids;   //告警文件id集合
 	//遍历邮件附件
 	for(int i=0;i<msi.mail.AttachFileNames.size();i++)
 	{	//判断附件文件类型
@@ -142,6 +123,7 @@ void DetectAttachments(MailServerInfo msi)
 					if(  !(   (pic[0] == (char)0xff)   && (pic[1] == (char)0xd8)   &&  (pic[pic_len-2] == (char)0xff)    && (pic[pic_len-1] == (char)0xd9)  ) ){
 						cout<<"Corrupt Imaget!"<<endl;
 						msi.mail.AnalysisResults.push_back(-100);
+						msi.mail.LevelResults.push_back(-1);
 					}
 					else
 					{
@@ -153,6 +135,7 @@ void DetectAttachments(MailServerInfo msi)
 				        cout << "decision value: " << deciVal << endl;
 						cout<<"初步分析结果: "<<result<<endl;
 						msi.mail.AnalysisResults.push_back(result);
+						msi.mail.LevelResults.push_back(deciVal);
 					}
 				}
 				else if(strcmp(file_type,".png")==0)
@@ -165,48 +148,89 @@ void DetectAttachments(MailServerInfo msi)
 			        cout << "decision value: " << deciVal << endl;
 					cout<<"初步分析结果: "<<result<<endl;
 					msi.mail.AnalysisResults.push_back(result);
+					msi.mail.LevelResults.push_back(deciVal);
 				}
 				else{
-					;
+					;//其它格式
 				}
 			}
 			else                                                                                                       //其它文件类型
 			{
-				cout<<"其它类型数据..."<<endl;
+				cout<<"其它文件类型附件..."<<endl;
 				msi.mail.AnalysisResults.push_back(-100);
-			}
-
-			string  id=WritingAlerts(msi,i,file_type,PICTURE_TO_STORE);
-			if(id!="")
-			{
-				qt_file_ids+=id;
-				qt_file_ids+=",";
+				msi.mail.LevelResults.push_back(-1);
 			}
 		}
 		else{
+			cout<<"无法解析该文件名称..."<<endl;
 			msi.mail.AnalysisResults.push_back(-100);            //无法解析的文件名直接丢弃
+			msi.mail.LevelResults.push_back(-1);
 		}
 	}
-
-	int qt_service_id;
-	if(qt_file_ids.size()!=0)
-	{
-		qt_service_id=qt.set_qt_service(msi,qt_file_ids);
-	}
-	for (int i = 0; i < msi.mail.AttachFileNames.size(); i++) {
-		if (msi.mail.AnalysisResults[i] == 1) {
-		qt.set_qt_alert(msi, qt_service_id, i);
-	    }
-	   else {	//删除文件
-		char file_to_delete[100];
-		strcpy(file_to_delete, PICTURE_TO_STORE);
-		strcat(file_to_delete, msi.mail.AttachFileNames[i]);
-	//	remove(file_to_delete);
-	    }
-	}
-
-
-
-	qt.Commit();
 }
 
+//分析结果写告警到数据库
+
+bool hasAlertFiles(const MailServerInfo & msi)
+{
+	bool has=false;
+	for(int index=0;index<msi.mail.AttachFileNames.size();index++)
+	{
+		if (msi.mail.AnalysisResults[index] == 1)
+		{
+			has=true;
+			break;
+		}
+	}
+	return has;
+}
+
+void  WritingAlerts(const MailServerInfo & msi)
+{
+	if(hasAlertFiles(msi))
+	{
+		string qt_file_ids;   //告警文件id集合
+		//遍历邮件附件
+		for(int index=0;index<msi.mail.AttachFileNames.size();index++)
+		{
+			if (msi.mail.AnalysisResults[index] == 1) {  //有隐写则写入file表
+				if (msi.common.OPT_TUPLE4_LIST != NULL) {
+					cout<<"检测到可疑文件!"<<endl;
+					qt_file_ids += qt.set_qt_file(msi,index);
+					qt_file_ids+=",";
+					cout<<"set QT_FILE OK!"<<endl;
+				}
+			}
+			else if(msi.mail.AnalysisResults[index]==-1) { 	//无隐写
+				cout<<"检测正常!"<<endl<<endl;
+			}
+			else
+			{
+				cout<<"数据错误或未知错误..."<<endl;				//其它处理返回值，包括数据出错、其它文件类型等
+			}
+		}
+
+		qt_file_ids.erase(qt_file_ids.end()-1);
+		int qt_service_id=qt.set_qt_service(msi,qt_file_ids);
+		cout<<"Inert Table QT_ALERT_SERVICE  OK! "<<endl;
+		qt.set_qt_alert(msi, qt_service_id);
+		cout<<"Inert Table QT_ALERT  OK! "<<endl;
+
+		for (int i = 0; i < msi.mail.AttachFileNames.size(); i++) {
+			if (msi.mail.AnalysisResults[i] != 1) {
+				char file_to_delete[100];
+				strcpy(file_to_delete, PICTURE_TO_STORE);
+				strcat(file_to_delete, msi.mail.AttachFileNames[i]);
+			//	remove(file_to_delete);
+		    }
+		}
+
+		qt.Commit();
+	}
+}
+
+void ProcessSmtpAttachments(MailServerInfo & msi)
+{
+	DetectAttachments(msi);
+	WritingAlerts(msi);
+}

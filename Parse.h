@@ -52,6 +52,6 @@ void FreeMailServerInfo(MailServerInfo *mf);
 //封装
 void HttpParse(char  *data ,int opt_num);
 void SmtpParse(char  *data ,int opt_num);
-void DetectAttachments(MailServerInfo msi);
+void ProcessSmtpAttachments(MailServerInfo & msi);
 
 #endif /* PARSE_H_ */

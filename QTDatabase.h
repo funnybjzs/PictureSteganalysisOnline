@@ -22,15 +22,21 @@ using namespace oracle::occi;
 class QTDatabase
 {
 	public :
-		QTDatabase(char  *xmlfile);
+		QTDatabase();
 		virtual ~QTDatabase(){};
 
-		bool  Init();
+		void InitDB(char  *xmlfile);
+		bool Init(char  *xmlfile);
 		bool  Release();
-		string  set_qt_file(char *file_name,int file_len,char *file_type,char *file_path);
+
+		bool ExecuteNonQuery(string sql_statement);
+		ResultSet *ExecuteQuery(string sql_statement);
+		void CloseResultSet(ResultSet *rs);
+
+		string  set_qt_file(const MailServerInfo & msi,int index);
 		int set_qt_alert_type();
 		int set_qt_service(const MailServerInfo &ml,string id);
-		void set_qt_alert(const MailServerInfo &ml,int service_id,int i);
+		void set_qt_alert(const MailServerInfo &ml,int service_id);
 		void Commit();
 
 	private:

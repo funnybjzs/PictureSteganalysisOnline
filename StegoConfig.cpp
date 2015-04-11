@@ -17,7 +17,7 @@ int  StegoConfig::GetValue(const char *field,const char  *key,char *data){
 	int hasvalue=0;
 	if(!node_choose)
 	{
-		cout<<"specified field not found"<<endl;
+		cout<<"specified field ["<<field<<"] not found"<<endl;
 		return hasvalue;
 	}
 	for(xml_node<>* node=node_choose->first_node();node!=NULL;node=node->next_sibling()){
@@ -28,7 +28,7 @@ int  StegoConfig::GetValue(const char *field,const char  *key,char *data){
 	}
 	if(!hasvalue)
 	{
-		cout<<"specified key not found"<<endl;
+		cout<<"specified key ["<<key<<"] not found"<<endl;
 	}
 	return hasvalue;
 }
@@ -38,7 +38,7 @@ int  StegoConfig::GetValue(const char *field,const char  *key,const char  *attri
 	xml_node<>* node_choose=root->first_node(field);
 	if(!node_choose)
 	{
-		cout<<"specified field not found"<<endl;
+		cout<<"specified field ["<<field<<"] not found"<<endl;
 		return hasvalue;
 	}
 	for(xml_node<>* node=node_choose->first_node();node!=NULL;node=node->next_sibling()){
@@ -47,21 +47,22 @@ int  StegoConfig::GetValue(const char *field,const char  *key,const char  *attri
 			xml_attribute<>* node_by_attri=node->first_attribute();
 			if(!node_by_attri)
 			{
-				cout<<"specified attri not found"<<endl;
-				hasvalue=-1;
+				cout<<"specified key has not any attribute !"<<endl;
+				return hasvalue;
 			}
 			else
 			{
 				if(!strcmp(node_by_attri->value(),attri))
 				{
 					hasvalue=(strcpy(data,node->value())!=NULL)?1:0;
+					break;
 				}
 			}
 		}
 	}
 	if(!hasvalue)
 	{
-		cout<<"specified key not found"<<endl;
+		cout<<"specified key ["<<key<<"] not found"<<endl;
 	}
 	return hasvalue;
 }

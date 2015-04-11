@@ -6,7 +6,8 @@
  */
 
 #include "QTDatabase.h"
-
+#include "systemall.h"
+#include <ctime>
 bool GetFormatTime(char *time,char *format_time)
 {
 	string months[12]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
@@ -40,8 +41,35 @@ bool GetFormatTime(char *time,char *format_time)
 
 	return result;
 }
+//通用解析。处理文件名，从右边过滤文件类型
+char*GetFileFormat(char *s1,char const *s2)
+{
+	register char *last;
+	register char *current;
 
-QTDatabase::QTDatabase(char *xmlfile)
+	last=NULL;
+
+	if (*s2!='\0') {
+		current = strstr(s1,s2);
+
+		while(current!=NULL)
+		{
+			last=current;
+			current=strstr(last+1,s2);
+		}
+	}
+
+	return last;
+}
+
+QTDatabase::QTDatabase()
+{
+	env=NULL;
+	conn=NULL ;
+	st=NULL;
+}
+
+void QTDatabase::InitDB(char *xmlfile)
 {
 	StegoConfig scfg(xmlfile);
 	if(!(scfg.GetDBInfo(dbinfo)&&scfg.GetValue("Database","User",username_)&&scfg.GetValue("Database","Passwd",password_)))
@@ -56,13 +84,15 @@ QTDatabase::QTDatabase(char *xmlfile)
 		cout<<"配置文件数据库表信息错误!"<<endl;
 		exit(1);
 	}
+
 	this->qt_equ_info_id=atoi(tmp1);
 	this->qt_alert_type_id=atoi(tmp2);
 
 }
 
-bool QTDatabase::Init()
+bool QTDatabase::Init(char  *xmlfile)
 {
+	InitDB(xmlfile);
 	try
 	{
          env=Environment::createEnvironment(Environment::DEFAULT);
@@ -75,6 +105,8 @@ bool QTDatabase::Init()
 		 cout<<"数据库SQL语句初始化OK!"<<endl;
 
 		 cout<<"----------数据库环境准备OK !-----------"<<endl;
+
+		 srand((unsigned)time(NULL));
 		 return true	;
 	}
 	catch(SQLException e)
@@ -83,13 +115,13 @@ bool QTDatabase::Init()
 
 	     return false;
 	}
-
 }
 
 bool QTDatabase::Release()
 {
 	try
 	{
+		  conn->terminateStatement(st);
 	      env->terminateConnection(conn);
 	      Environment::terminateEnvironment(env);
 	      cout<<"----------Database Environment Release Finish !-----------"<<endl;
@@ -102,153 +134,173 @@ bool QTDatabase::Release()
 	}
 }
 
-string QTDatabase::set_qt_file(char *file_name,int file_len,char *file_type,char *file_path)
+void QTDatabase::CloseResultSet(ResultSet * rs)
 {
-		try
-		{
-			st->setSQL("insert into QT_FILE(FILE_ID,FILE_NAME,FILE_LEN,FILE_TYPE,FILE_PATH,FILE_DESCRIPTION)  values(FILE_ID_SEQ.nextval,:1,:2,:3,:4,:5)");
-
-			st->setString(1, file_name);
-			st->setInt(2, file_len);
-			if(strcmp(file_type,".jpg")==0)
-			{
-				st->setInt(3,16);
-			}
-			else if(strcmp(file_type,".png")==0)
-			{
-				st->setInt(3,33);
-			}
-			else
-			{
-				st->setInt(3,-1);
-			}
-			st->setString(4, file_path);
-			st->setString(5,"图像隐写文件");
-
-			st->executeUpdate();
-//	       conn->commit();
-
-			string  file_id;
-			ResultSet *rs=st->executeQuery("select FILE_ID_SEQ.currval from dual");
-			while(rs->next())
-			{
-				file_id=rs->getString(1);
-			}
-			//cout<<"Inert Table QT_FILE  OK! "<<endl;
-			return file_id;
-		}
-		catch (SQLException e)
-		{
-			 cout<<e.what()<<endl;
-			 return "";
-		}
+	if(rs !=NULL)
+	{
+		st->closeResultSet(rs);
+		//conn->terminateStatement(st);
+	}
 }
 
-int QTDatabase::set_qt_alert_type()
+bool QTDatabase::ExecuteNonQuery(string sql_statement)
 {
-		try
-		{
-			//st->setSQL("insert into QT_ALERT_TYPE(ALERT_TYPE_ID,ALERT_TYPE_LABEL,ALERT_TYPE_DESCRIPTION) values(ALERT_TYPE_ID_SEQ.nextval,:1,:2)");
-			st->setSQL("insert into QT_ALERT_TYPE(ALERT_TYPE_ID,ALERT_TYPE_LABEL,ALERT_TYPE_DESCRIPTION) values(null,:1,:2)");
-			st->setString(1,"13-01");
-			st->setString(2,"发现图像隐写文件 ");
+    try
+    {
+        st->setSQL(sql_statement);
+        st->executeUpdate();
+		//con->commit();
+    }
 
-			st->executeUpdate();
+    catch (SQLException &ex)
+    {
+		conn->rollback();
+        cout << "Exception thrown for NonQuery" << endl;
+        cout << "Error number: " << ex.getErrorCode() << endl;
+        cout << "Error Msg: "<< ex.getMessage() << endl;
+        cout << "SQL: "<<sql_statement << endl;
+		//conn->terminateStatement(st);
+		return false;
 
-			int alert_type_id;
-			ResultSet *rs=st->executeQuery("select ALERT_TYPE_ID_SEQ.currval from dual");
-			while(rs->next())
-			{
-				alert_type_id=rs->getInt(1);
-			}
-			//cout<<"Inert Table QT_ALERT_TYPE  OK! "<<endl;
-			return alert_type_id;
-		}
-		catch (SQLException e)
+    }
+    //conn->terminateStatement(st);
+	return true;
+}
+
+ResultSet *QTDatabase::ExecuteQuery(string sql_statement)
+{
+	ResultSet *rs=NULL;
+
+	try
+	{
+		st->setSQL(sql_statement);
+		rs=st->executeQuery();
+
+	}
+	catch(SQLException &ex)
+	{
+		conn->rollback();
+        cout << "Exception thrown for NonQuery" << endl;
+        cout << "Error number: " << ex.getErrorCode() << endl;
+        cout << "Error Msg: "<< ex.getMessage() << endl;
+        cout << "SQL: "<<sql_statement << endl;
+	}
+	return rs;
+}
+
+string QTDatabase::set_qt_file(const MailServerInfo & msi,int index)
+{
+		char sql_image[512];
+		sprintf(sql_image,"insert into QT_IMAGE_INFO(IMAGE_ID,IMAGE_DEC_VAL) values(IMAGE_ID_SEQ.nextval,%f)",msi.mail.LevelResults[index]);
+		if(!ExecuteNonQuery(sql_image))
 		{
-			 cout<<e.what()<<endl;
-			 return 0;
+			exit(1);
 		}
+		ResultSet *rs1=ExecuteQuery ("select IMAGE_ID_SEQ.currval from dual");
+		int img_info_id;
+		while(rs1->next())
+		{
+			img_info_id=rs1->getInt(1);
+		}
+
+		char sql[1024];
+		int sn=rand();
+		char store_name[32];
+		sprintf(store_name,"%d",sn);
+
+		char *file_type = GetFileFormat(msi.mail.AttachFileNames[index], ".");
+		if(strcmp(file_type,".jpg")==0)
+		{
+			sprintf(sql,"insert into QT_FILE(FILE_ID,FILE_NAME,FILE_LEN,FILE_TYPE,FILE_PATH,FILE_STORAGE_NAME,FILE_DETAIL_TABLE,FILE_DETAIL_TABLE_ID) "
+					" values(FILE_ID_SEQ.nextval,'%s',%d,%d,'%s','%s','%s',%d)",msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],16,PICTURE_TO_STORE,
+					store_name,"QT_IMAGE_INFO",img_info_id);
+		}
+		else if(strcmp(file_type,".png")==0)
+		{
+			sprintf(sql,"insert into QT_FILE(FILE_ID,FILE_NAME,FILE_LEN,FILE_TYPE,FILE_PATH,FILE_STORAGE_NAME,FILE_DETAIL_TABLE,FILE_DETAIL_TABLE_ID) "
+					" values(FILE_ID_SEQ.nextval,'%s',%d,%d,'%s',%d,'%s',%d)",msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],33,PICTURE_TO_STORE,
+					store_name,"QT_IMAGE_INFO",img_info_id);
+		}
+		else
+		{
+			;
+		}
+
+		if(!ExecuteNonQuery(sql))
+		{
+			exit(1);
+		}
+
+		string file_id;
+		ResultSet *rs2=ExecuteQuery("select FILE_ID_SEQ.currval from dual");
+		while(rs2->next())
+		{
+			file_id=rs2->getString(1);
+		}
+
+		//CloseResultSet(rs1);
+		//CloseResultSet(rs2);
+		return file_id;
 }
 
 int QTDatabase::set_qt_service(const MailServerInfo &ml,string fileid)
 {
-		try
+		char sql[1024];
+		int file_num=0;
+		for(int i=0;i<ml.mail.AttachFileNames.size();i++)
 		{
-			st->setSQL("insert into QT_SERVICE(SERVICE_ID,SERVICE_TYPE,FILE_NUM,FILE_ID,MAIL_FROM,MAIL_TO,MAIL_TIME,MAIL_SUBJECT) values(SERVICE_ID_SEQ.nextval,:1,:2,:3,:4,:5,to_date(:6,'yyyy-mm-dd hh24:mi:ss'),:7)");
-			st->setInt(1,31);
-			//st->setInt(2,ml.mail.AttachFileLength.size());    该行为文件个数，下面的统计的是告警文件的个数
-			int file_num=0;
-			for(int i=0;i<ml.mail.AttachFileNames.size();i++)
+			if	(ml.mail.AnalysisResults[i]==1)
 			{
-				if	(ml.mail.AnalysisResults[i]==1)
-				{
-						file_num++;
-				}
+					file_num++;
 			}
-			st->setInt(2,file_num);
-			st->setString(3,fileid);
-			st->setString(4,ml.mail.opt_mail_from);
-			st->setString(5,ml.mail.opt_mail_to);
-
-			char mail_time[32]; //转换时间戳格式
-			st->setString(6,(GetFormatTime(ml.common.OPT_DATE,mail_time)==TRUE)?mail_time:NULL);
-			st->setString(7,(ml.mail.opt_subject!=NULL)?ml.mail.opt_subject:NULL);
-			st->executeUpdate();
-
-			int service_id;
-			ResultSet *rs=st->executeQuery("select SERVICE_ID_SEQ.currval from dual");
-			while(rs->next())
-			{
-				service_id=rs->getInt(1);
-			}
-			//cout<<"Inert Table QT_ALERT_SERVICE  OK! "<<endl;
-			return service_id;
 		}
-		catch (SQLException e)
+		char mail_time[32]; //转换时间戳格式
+		const char *fids=fileid.c_str();
+		sprintf(sql,"insert into QT_SERVICE(SERVICE_ID,SERVICE_TYPE,FILE_NUM,FILE_ID,MAIL_FROM,MAIL_TO,MAIL_SUBJECT,MAIL_TIME) "
+				"values(SERVICE_ID_SEQ.nextval,%d,%d,'%s','%s','%s','%s',to_date('%s','yyyy-mm-dd hh24:mi:ss'))",31,file_num,fids,
+				ml.mail.opt_mail_from,ml.mail.opt_mail_to,ml.mail.opt_subject,(GetFormatTime(ml.common.OPT_DATE,mail_time)==TRUE)?mail_time:NULL);
+
+		if(!ExecuteNonQuery(sql))
 		{
-			 cout<<e.what()<<endl;
-			 return 0;
+			exit(1);
 		}
+
+		int service_id;
+		ResultSet *rs=ExecuteQuery("select SERVICE_ID_SEQ.currval from dual");
+		while(rs->next())
+		{
+			service_id=rs->getInt(1);
+		}
+		//CloseResultSet(rs);
+		return service_id;
 }
 
-void QTDatabase::set_qt_alert(const MailServerInfo &ml,int service_id,int i)
+void QTDatabase::set_qt_alert(const MailServerInfo &ml,int service_id)
 {
-	try
+	char sql[1024];
+	string info;
+	for(int i=0;i<ml.mail.AttachFileNames.size();i++)
 	{
-
-		st->setSQL("insert into QT_ALERT(ALERT_ID,EQU_ID,OCCUR_TIME,ALERT_LEVEL_ID,ALERT_TYPE_ID,ALERT_DESCRIPTION,CERTAINY_FACTOR,SIG_ID,OPERATE_STAGE,JUDGE_RESULT,"
-				"FLOW_ID,SERVICE_TYPE,SERVICE_ID,SRC_IP,DST_IP,SRC_PORT,DST_PORT) values(ALERT_ID_SEQ.nextval,:1,(select sysdate from dual),:2,:3,:4,:5,:6,:7,:8,:9,:10,:11,:12,:13,:14,:15)");
-		st->setInt(1,this->qt_equ_info_id);
-		st->setInt(2,3);
-		st->setInt(3,this->qt_alert_type_id);
-		string tmp=ml.mail.AttachFileNames[i];
-		string info="发现"+tmp+"文件中包含隐写信息!";
-		st->setString(4,info);
-		st->setInt(5,1);
-		st->setInt(6,0);
-		st->setInt(7,1);
-		st->setInt(8,0);
-
-		st->setString(9,ml.common.OPT_FLOW_ID_LIST);
-		st->setInt(10,31);
-		st->setInt(11,service_id);
-		st->setString(12,ml.common.OPT_SERVER_IP);
-		st->setString(13,ml.common.OPT_CLIENT_IP);
-		st->setInt(14,atoi(ml.common.OPT_SERVER_PORT));
-		st->setInt(15,atoi(ml.common.OPT_CLIENT_PORT));
-
-		st->executeUpdate();
-
-
-		//cout<<"Inert Table QT_ALERT  OK! "<<endl;
-		cout<<"告警写入数据库 OK! "<<endl;
+		if	(ml.mail.AnalysisResults[i]==1)
+		{
+			string tmp=ml.mail.AttachFileNames[i];
+			info+=tmp;
+			info+=",";
+		}
 	}
-	catch (SQLException e)
+	info.erase(info.end()-1);
+	info="发现"+info+"中包含隐写信息!";
+	const char *des=info.c_str();
+
+	sprintf(sql,"insert into QT_ALERT(ALERT_ID,EQU_ID,OCCUR_TIME,ALERT_LEVEL_ID,ALERT_TYPE_ID,ALERT_DESCRIPTION,CERTAINY_FACTOR,SIG_ID,OPERATE_STAGE,JUDGE_RESULT,"
+			"FLOW_ID,SERVICE_TYPE,SERVICE_ID,SRC_IP,DST_IP,SRC_PORT,DST_PORT) values(ALERT_ID_SEQ.nextval,%d,(select sysdate from dual),%d,%d,'%s',%d,%d,%d,%d,'%s',%d,%d,'%s','%s',%d,%d)",
+			qt_equ_info_id,3,qt_alert_type_id,des,1,0,1,0,ml.common.OPT_FLOW_ID_LIST,31,service_id,
+			ml.common.OPT_SERVER_IP,ml.common.OPT_CLIENT_IP,atoi(ml.common.OPT_SERVER_PORT),atoi(ml.common.OPT_CLIENT_PORT));
+
+	if(!ExecuteNonQuery(sql))
 	{
-		 cout<<e.what()<<endl;
+		exit(1);
 	}
-
 }
 
 void QTDatabase::Commit()

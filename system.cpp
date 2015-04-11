@@ -7,13 +7,6 @@
 
 #include "systemall.h"
 #include <string.h>
-//模板信息
- sys_setting  *setting;
- QTDatabase qt("./QTStego.xml");
-
-char FILTER_TYPE[32];
-char PICTURE_TO_STORE[64];
-
 
 void InitSystemEnv(char  *xmlfile)
 {
@@ -26,6 +19,7 @@ void InitSystemEnv(char  *xmlfile)
 	else
 	{
 		cout<<"---获取基本信息出错---"<<endl;
+		exit(1);
 	}
 	//载入隐写模版
 	char jpgml[128]={0},pngml[128]={0};
@@ -39,9 +33,10 @@ void InitSystemEnv(char  *xmlfile)
 	else
 	{
 		cout<<"------分类器模板信息出错，请检查配置文件内容是否正确-------"<<endl;
+		exit(1);
 	}
 	//链接数据库，准备相关资源
-	if(qt.Init())
+	if(qt.Init(xmlfile))
 	{
 		 cout<<"----------系统环境准备OK !-----------"<<endl;
 	}
