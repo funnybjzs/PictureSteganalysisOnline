@@ -7,7 +7,7 @@
 
 #include "QTDatabase.h"
 #include "systemall.h"
-#include <ctime>
+
 bool GetFormatTime(char *time,char *format_time)
 {
 	string months[12]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
@@ -204,22 +204,19 @@ string QTDatabase::set_qt_file(const MailServerInfo & msi,int index)
 		}
 
 		char sql[1024];
-		int sn=rand();
-		char store_name[32];
-		sprintf(store_name,"%d",sn);
-
 		char *file_type = GetFileFormat(msi.mail.AttachFileNames[index], ".");
+
 		if(strcmp(file_type,".jpg")==0)
 		{
 			sprintf(sql,"insert into QT_FILE(FILE_ID,FILE_NAME,FILE_LEN,FILE_TYPE,FILE_PATH,FILE_STORAGE_NAME,FILE_DETAIL_TABLE,FILE_DETAIL_TABLE_ID) "
 					" values(FILE_ID_SEQ.nextval,'%s',%d,%d,'%s','%s','%s',%d)",msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],16,PICTURE_TO_STORE,
-					store_name,"QT_IMAGE_INFO",img_info_id);
+					msi.mail.AttachFileStoredNames[index].c_str(),"QT_IMAGE_INFO",img_info_id);
 		}
 		else if(strcmp(file_type,".png")==0)
 		{
 			sprintf(sql,"insert into QT_FILE(FILE_ID,FILE_NAME,FILE_LEN,FILE_TYPE,FILE_PATH,FILE_STORAGE_NAME,FILE_DETAIL_TABLE,FILE_DETAIL_TABLE_ID) "
 					" values(FILE_ID_SEQ.nextval,'%s',%d,%d,'%s',%d,'%s',%d)",msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],33,PICTURE_TO_STORE,
-					store_name,"QT_IMAGE_INFO",img_info_id);
+					msi.mail.AttachFileStoredNames[index].c_str(),"QT_IMAGE_INFO",img_info_id);
 		}
 		else
 		{

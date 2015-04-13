@@ -7,6 +7,7 @@
 
 #include "systemall.h"
 #include <string.h>
+#include <ctime>
 
 void InitSystemEnv(char  *xmlfile)
 {
@@ -35,6 +36,8 @@ void InitSystemEnv(char  *xmlfile)
 		cout<<"------分类器模板信息出错，请检查配置文件内容是否正确-------"<<endl;
 		exit(1);
 	}
+
+	srand((unsigned)time(NULL)); //初始化随机种子
 	//链接数据库，准备相关资源
 	if(qt.Init(xmlfile))
 	{

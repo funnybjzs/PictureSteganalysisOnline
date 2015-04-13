@@ -8,6 +8,7 @@
 #ifndef APPDATADEFINE_H_
 #define APPDATADEFINE_H_
 #include  <vector>
+#include <string>
 using namespace std;
 //应用层数据消息头：开始行3个域的数据，其它包括7个域的数据
 #define APPDATA_HEARD_STARTNUM 3
@@ -100,6 +101,7 @@ typedef struct {
 	vector<char *> AttachFileNames;
 	vector<int> AttachFileLength;
 	vector<char *>AttachFileContent;
+	vector<string> AttachFileStoredNames;
 	//检测结果
 	vector<double> AnalysisResults;
 	vector<double > LevelResults;
