@@ -11,20 +11,21 @@
 bool GetFormatTime(char *time,char *format_time)
 {
 	string months[12]={"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
-	char getime[32];
+	char getime[32]={0};
 
 	bool result=false;
 
-	if(sscanf(time," %*[^ ] %[^+]",getime)!=1)
+	//cout<<time<<endl;
+	if(sscanf(time," %*[^0-3]%[^+]",getime)==-1)
 	{
-		perror("sscanf fail !");
+		perror("sscanf time fail !");
 		return result;
 	}
-	char y[8],m[8],d[8],t[16];
+	char y[8]={0},m[8]={0},d[8]={0},t[16]={0};
 
-	if(sscanf(getime,"%[^ ] %[^ ] %[^ ] %[^ ] ",d,m,y,t)!=4)
+	if(sscanf(getime,"%2s%3s%4s%s",d,m,y,t)==-1)
 	{
-		perror("sscanf fail !");
+		perror("sscanf ymdt fail!");
 		return result;
 	}
 
@@ -215,7 +216,7 @@ string QTDatabase::set_qt_file(const MailServerInfo & msi,int index)
 		else if(strcmp(file_type,".png")==0)
 		{
 			sprintf(sql,"insert into QT_FILE(FILE_ID,FILE_NAME,FILE_LEN,FILE_TYPE,FILE_PATH,FILE_STORAGE_NAME,FILE_DETAIL_TABLE,FILE_DETAIL_TABLE_ID) "
-					" values(FILE_ID_SEQ.nextval,'%s',%d,%d,'%s',%d,'%s',%d)",msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],33,PICTURE_TO_STORE,
+					" values(FILE_ID_SEQ.nextval,'%s',%d,%d,'%s','%s','%s',%d)",msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],33,PICTURE_TO_STORE,
 					msi.mail.AttachFileStoredNames[index].c_str(),"QT_IMAGE_INFO",img_info_id);
 		}
 		else
