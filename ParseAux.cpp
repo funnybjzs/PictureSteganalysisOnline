@@ -75,15 +75,16 @@ void StoreAttachFiles(const char *file_name,int file_length,char *file_content,c
 }
 
 //给smtp值赋值
-void PushValueToSmtp(MailServerInfo & msi, int result,double decValue,const char *filestored_name)
+void PushValueToSmtp(MailServerInfo & msi, int result,double decValue,const char *filestored_name,StegoInfo s_info)
 {
 	msi.mail.AnalysisResults.push_back(result);
 	msi.mail.LevelResults.push_back(decValue);
-	if((strcmp(filestored_name,"Corrupt Imaget")!=0)&&(strcmp(filestored_name,"Other File Type")!=0)&&
-			(strcmp(filestored_name,"Cannot Parse Filename")!=0))
-	{
+	msi.mail.AnalysisInfos.push_back(s_info);
+//	if((strcmp(filestored_name,"Corrupt Imaget")!=0)&&(strcmp(filestored_name,"Other File Type")!=0)&&
+//			(strcmp(filestored_name,"Cannot Parse Filename")!=0))
+//	{
 		msi.mail.AttachFileStoredNames.push_back(filestored_name);
-	}
+//	}
 }
 
 void HttpParse(char *data,int opt_num)
@@ -135,6 +136,7 @@ void DetectAttachments(MailServerInfo & msi)
 	for(int i=0;i<msi.mail.AttachFileNames.size();i++)
 	{	//判断附件文件类型
 		char *file_type = str_reverse(msi.mail.AttachFileNames[i], ".");
+		StegoInfo info;	//隐写检测信息类
 		if(file_type!=NULL)
 		{
 			cout<<"附带文件名称 : "<<msi.mail.AttachFileNames[i]<<endl;
@@ -154,20 +156,17 @@ void DetectAttachments(MailServerInfo & msi)
 				{
 					if(  !(   (pic[0] == (char)0xff)   && (pic[1] == (char)0xd8)   &&  (pic[pic_len-2] == (char)0xff)    && (pic[pic_len-1] == (char)0xd9)  ) ){
 						cout<<"Corrupt Imaget!"<<endl;
-						PushValueToSmtp(msi,-100,-1,"Corrupt Imaget");
+						PushValueToSmtp(msi,-100,-1,"Corrupt Imaget",info);
 					}
 					else
 					{
-				        int result= 0;
-				        double deciVal = 0.0;
-
 						GetStorageName(storedfile_name,"31",".jpg");				//生成随机名称
 						StoreAttachFiles(storedfile_name,msi.mail.AttachFileLength[i],msi.mail.AttachFileContent[i],storedfile_path);
 				        ////这个是分析过程
-				        int errorCode = steganalysis(msi.mail.AttachFileContent[i], msi.mail.AttachFileLength[i],storedfile_path, *setting, result, deciVal);
-				        cout << "decision value: " << deciVal << endl;
-						cout<<"初步分析结果: "<<result<<endl;
-						PushValueToSmtp(msi,result,deciVal,storedfile_name);
+				        int errorCode=steganalysis(msi.mail.AttachFileContent[i],msi.mail.AttachFileLength[i],storedfile_path, *setting,info);
+						cout << "decision value: " << info.deciVal << endl;
+						cout<<"初步分析结果: "<<info.label<<endl;
+						PushValueToSmtp(msi,info.label,info.deciVal,storedfile_name,info);
 					}
 				}
 				else if(strcmp(file_type,".png")==0)
@@ -178,24 +177,36 @@ void DetectAttachments(MailServerInfo & msi)
 					GetStorageName(storedfile_name,"31",".png");				//生成随机名称
 					StoreAttachFiles(storedfile_name,msi.mail.AttachFileLength[i],msi.mail.AttachFileContent[i],storedfile_path);
 			        ////这个是分析过程
-			        int errorCode = steganalysis(msi.mail.AttachFileContent[i], msi.mail.AttachFileLength[i],storedfile_path, *setting, result, deciVal);
+			        int errorCode = steganalysis(msi.mail.AttachFileContent[i], msi.mail.AttachFileLength[i],storedfile_path, *setting, info);
 			        cout << "decision value: " << deciVal << endl;
 					cout<<"初步分析结果: "<<result<<endl;
-					PushValueToSmtp(msi,result,deciVal,storedfile_name);
+					PushValueToSmtp(msi,info.label,info.deciVal,storedfile_name,info);
+				}
+				else if(strcmp(file_type,".bmp")==0){
+			        int result= 0;
+			        double deciVal = 0.0;
+
+					GetStorageName(storedfile_name,"31",".bmp");				//生成随机名称
+					StoreAttachFiles(storedfile_name,msi.mail.AttachFileLength[i],msi.mail.AttachFileContent[i],storedfile_path);
+			        ////这个是分析过程
+			        int errorCode = steganalysis(msi.mail.AttachFileContent[i], msi.mail.AttachFileLength[i],storedfile_path, *setting, info);
+			        cout << "decision value: " << deciVal << endl;
+					cout<<"初步分析结果: "<<result<<endl;
+					PushValueToSmtp(msi,info.label,info.deciVal,storedfile_name,info);
 				}
 				else{
-					;//其它格式
+					;	//其它格式
 				}
 			}
 			else                                                                                                       //其它文件类型
 			{
 				cout<<"其它文件类型附件..."<<endl;
-				PushValueToSmtp(msi,-100,-1,"Other File Type");
+				PushValueToSmtp(msi,-100,-1,"Other File Type",info);
 			}
 		}
 		else{
 			cout<<"无法解析该文件名称..."<<endl;                                 //无法解析的文件名直接丢弃
-			PushValueToSmtp(msi,-100,-1,"Cannot Parse Filename");
+			PushValueToSmtp(msi,-100,-1,"Cannot Parse Filename",info);
 		}
 	}
 }

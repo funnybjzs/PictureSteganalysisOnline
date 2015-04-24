@@ -408,6 +408,7 @@ void FreeMailServerInfo(MailServerInfo *mf){
 		mf->mail.AttachFileStoredNames.clear();
 		mf->mail.AnalysisResults.clear();
 		mf->mail.LevelResults.clear();
+		mf->mail.AnalysisInfos.clear();
 	}
 
 }

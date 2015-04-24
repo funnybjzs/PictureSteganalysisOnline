@@ -9,6 +9,7 @@
 #define APPDATADEFINE_H_
 #include  <vector>
 #include <string>
+#include "include/stego_analysis.h"
 using namespace std;
 //应用层数据消息头：开始行3个域的数据，其它包括7个域的数据
 #define APPDATA_HEARD_STARTNUM 3
@@ -105,6 +106,7 @@ typedef struct {
 	//检测结果
 	vector<double> AnalysisResults;
 	vector<double > LevelResults;
+	vector<StegoInfo>AnalysisInfos;
 }Mail_Option;
 
 typedef struct {

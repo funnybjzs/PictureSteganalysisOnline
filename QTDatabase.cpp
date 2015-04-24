@@ -96,7 +96,7 @@ bool QTDatabase::Init(char  *xmlfile)
 	InitDB(xmlfile);
 	try
 	{
-         env=Environment::createEnvironment(Environment::DEFAULT);
+         env=Environment::createEnvironment("UTF8","UTF8",Environment::THREADED_MUTEXED);
 		 cout<<"数据库资源初始化OK !" <<endl;
 
 		 conn = env->createConnection(username_,password_,dbinfo);
@@ -191,9 +191,68 @@ ResultSet *QTDatabase::ExecuteQuery(string sql_statement)
 
 string QTDatabase::set_qt_file(const MailServerInfo & msi,int index)
 {
-		char sql_image[512];
-		sprintf(sql_image,"insert into QT_IMAGE_INFO(IMAGE_ID,IMAGE_DEC_VAL) values(IMAGE_ID_SEQ.nextval,%f)",msi.mail.LevelResults[index]);
-		if(!ExecuteNonQuery(sql_image))
+		ResultSet *rs_img_clf=ExecuteQuery("select image_clf_id_seq.nextval from dual");
+		rs_img_clf->next();
+		int image_clf_id=rs_img_clf->getInt(1);	//获取图像分类器信息表id;
+		StegoInfo sf=msi.mail.AnalysisInfos[index];	//图像信息结构体
+		char sql_img_clf[4096]={0};								//插入图像分类器信息表sql语句
+		char clf_quality_table[521]={0};
+		char clf_quality_table_pre[512]={0};
+		char *p_t=clf_quality_table;
+		char *p_tr=clf_quality_table_pre;
+		for(int i=0;i<64;i++)	//64是量化矩阵系数个数
+		{
+			int n1=0,n2=0;
+			if((i+1)%8!=0)
+			{
+				n1=sprintf(p_t,"%d ",sf.clf_info.clf_qt[i]);
+				n2=sprintf(p_tr,"%d ",sf.clf_info.clf_qt_prev[i]);
+			}
+			else
+			{
+				n1=sprintf(p_t,"%d\n",sf.clf_info.clf_qt[i]);
+				n2=sprintf(p_tr,"%d\n",sf.clf_info.clf_qt_prev[i]);
+			}
+			p_t=p_t+n1;
+			p_tr=p_tr+n2;
+		}
+		sprintf(sql_img_clf,"insert into QT_IMAGE_CLF_INFO(IMAGE_CLF_ID,IMAGE_CLF_WIDTH,IMAGE_CLF_HEIGHT,IMAGE_CLF_FEATURE_TYPE,"
+				"IMAGE_CLF_FEATURE_DIM,IMAGE_CLF_QUALITY_FACTOR,IMAGE_CLF_QUALITY_FACTOR_PRE,IMAGE_CLF_QUALITY_TABLE，"
+				"IMAGE_CLF_QUALITY_TABLE_PRE) values(%d,%d,%d,'%s',%d,%f,%f,'%s','%s')",image_clf_id,
+				sf.clf_info.clf_width,sf.clf_info.clf_height,sf.clf_info.feature_type.c_str(),
+				sf.clf_info.feature_dim,sf.clf_info.clf_qf,sf.clf_info.clf_qf_prev,
+				clf_quality_table,clf_quality_table_pre);
+		if(!ExecuteNonQuery(sql_img_clf))
+		{
+			exit(1);
+		}
+
+		char sql_img_info[4096];								//插入图像信息表sql语句
+		char img_quality_table[521]={0};
+		char img_quality_table_pre[512]={0};
+		char *t=img_quality_table;
+		char *tr=img_quality_table_pre;
+		for(int j=0;j<64;j++)	//64是量化矩阵系数个数
+		{
+			int n1=0,n2=0;
+			if((j+1)%8!=0)
+			{
+				n1=sprintf(t,"%d ",sf.img_info.img_qt[j]);
+				n2=sprintf(tr,"%d ",sf.img_info.img_qt_prev[j]);
+			}
+			else
+			{
+				n1=sprintf(t,"%d\n",sf.img_info.img_qt[j]);
+				n2=sprintf(tr,"%d\n",sf.img_info.img_qt_prev[j]);
+			}
+			t=t+n1;
+			tr=tr+n2;
+		}
+		sprintf(sql_img_info,"insert into QT_IMAGE_INFO(IMAGE_ID,IMAGE_DEC_VAL,IMAGE_WIDTH,IMAGE_HEIGHT,IMAGE_QUALITY_FACTOR,"
+				"IMAGE_QUALITY_FACTOR_PRE,IMAGE_QUALITY_TABLE,IMAGE_QUALITY_TABLE_PRE,IMAGE_CLF_ID) "
+				"values(IMAGE_ID_SEQ.nextval,%f,%d,%d,%f,%f,'%s','%s',%d)",msi.mail.LevelResults[index],sf.img_info.img_width,sf.img_info.img_height,
+				sf.img_info.img_qf,sf.img_info.img_qf_prev,img_quality_table,img_quality_table_pre,image_clf_id);
+		if(!ExecuteNonQuery(sql_img_info))
 		{
 			exit(1);
 		}
@@ -204,7 +263,7 @@ string QTDatabase::set_qt_file(const MailServerInfo & msi,int index)
 			img_info_id=rs1->getInt(1);
 		}
 
-		char sql[1024];
+		char sql[4096];
 		char *file_type = GetFileFormat(msi.mail.AttachFileNames[index], ".");
 
 		if(strcmp(file_type,".jpg")==0)
@@ -217,6 +276,12 @@ string QTDatabase::set_qt_file(const MailServerInfo & msi,int index)
 		{
 			sprintf(sql,"insert into QT_FILE(FILE_ID,FILE_NAME,FILE_LEN,FILE_TYPE,FILE_PATH,FILE_STORAGE_NAME,FILE_DETAIL_TABLE,FILE_DETAIL_TABLE_ID) "
 					" values(FILE_ID_SEQ.nextval,'%s',%d,%d,'%s','%s','%s',%d)",msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],33,PICTURE_TO_STORE,
+					msi.mail.AttachFileStoredNames[index].c_str(),"QT_IMAGE_INFO",img_info_id);
+		}
+		else if(strcmp(file_type,".bmp")==0)
+		{
+			sprintf(sql,"insert into QT_FILE(FILE_ID,FILE_NAME,FILE_LEN,FILE_TYPE,FILE_PATH,FILE_STORAGE_NAME,FILE_DETAIL_TABLE,FILE_DETAIL_TABLE_ID) "
+					" values(FILE_ID_SEQ.nextval,'%s',%d,%d,'%s','%s','%s',%d)",msi.mail.AttachFileNames[index],msi.mail.AttachFileLength[index],14,PICTURE_TO_STORE,
 					msi.mail.AttachFileStoredNames[index].c_str(),"QT_IMAGE_INFO",img_info_id);
 		}
 		else
